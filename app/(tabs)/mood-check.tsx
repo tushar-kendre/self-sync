@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ScrollView, Pressable, TextInput, FlatList } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '~/components/ui/button';
 import {
   Card,
@@ -18,6 +19,7 @@ import { Star } from '~/lib/icons/Star';
 import { Zap } from '~/lib/icons/Zap';
 import { router } from 'expo-router';
 import { useDatabase, useMoodLogs } from '~/lib/hooks/useDatabase';
+import { useColorScheme } from '~/lib/useColorScheme';
 import { ClipboardList } from '~/lib/icons/ClipboardList';
 
 const moodOptions = [
@@ -73,6 +75,7 @@ const getMoodBasedTags = (moodLevel: number | null) => {
 };
 
 export default function MoodCheckScreen() {
+  const { isDarkColorScheme } = useColorScheme();
   const { isInitialized } = useDatabase();
   const { createMoodLog, getTodayMoodLogs, getMoodStreak, loading: moodLoading } = useMoodLogs();
   
@@ -91,6 +94,23 @@ export default function MoodCheckScreen() {
   const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState('');
   const [moodStreak, setMoodStreak] = React.useState<number>(0);
+
+  // Helper function for theme-aware gradients
+  const getGradientColors = (type: 'header' | 'formHeader' | 'motivational' | 'summary' | 'encouragement' | 'moodResponse' | 'tagsSelected' | 'notesInput' | 'bottomEncouragement' | 'quickAdd', isDark: boolean = false) => {
+    const gradients = {
+      header: isDark ? ['#1e3a8a', '#581c87'] as const : ['#3b82f6', '#8b5cf6'] as const,
+      formHeader: isDark ? ['#166534', '#1e40af'] as const : ['#10b981', '#3b82f6'] as const,
+      motivational: isDark ? ['#166534', '#1e40af'] as const : ['#ecfdf5', '#dbeafe'] as const,
+      summary: isDark ? ['#854d0e', '#ea580c'] as const : ['#fefce8', '#fed7aa'] as const,
+      encouragement: isDark ? ['#be185d', '#7c3aed'] as const : ['#fdf2f8', '#f3e8ff'] as const,
+      moodResponse: isDark ? ['#581c87', '#be185d'] as const : ['#faf5ff', '#fdf2f8'] as const,
+      tagsSelected: isDark ? ['#3730a3', '#7c3aed'] as const : ['#eef2ff', '#f3e8ff'] as const,
+      notesInput: isDark ? ['#0f766e', '#166534'] as const : ['#f0fdfa', '#f0fdf4'] as const,
+      bottomEncouragement: isDark ? ['#1e40af', '#3730a3'] as const : ['#dbeafe', '#e0e7ff'] as const,
+      quickAdd: isDark ? ['#3b82f6', '#8b5cf6'] as const : ['#3b82f6', '#8b5cf6'] as const
+    };
+    return gradients[type];
+  };
 
   // Load today's logs when component mounts or database is ready
   React.useEffect(() => {
@@ -312,7 +332,12 @@ export default function MoodCheckScreen() {
         )}
 
         {/* Header */}
-        <View className="bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-900 dark:to-purple-900 px-6 py-8 pb-12">
+        <LinearGradient
+          colors={getGradientColors('header', isDarkColorScheme)}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="px-6 py-8 pb-12"
+        >
           <View className="flex-row items-center gap-3 mb-4">
             <Smile className="w-6 h-6 text-white" />
             <Text className="text-2xl font-bold text-white">Mood Tracking</Text>
@@ -323,11 +348,17 @@ export default function MoodCheckScreen() {
           <Text className="text-white/70 dark:text-white/60 text-sm">
             {getCurrentTime()} • {new Date().toLocaleDateString()}
           </Text>
-        </View>
+        </LinearGradient>
 
         <View className="gap-6 p-6 -mt-4">
           {/* Motivational Card */}
-          <Card className="w-full shadow-sm bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-green-200 dark:border-green-800">
+          <Card className="w-full shadow-sm border-green-200 dark:border-green-800">
+            <LinearGradient
+              colors={getGradientColors('motivational', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardContent className="pt-4">
               <View className="flex-row items-center gap-3">
                 <Zap className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -336,22 +367,36 @@ export default function MoodCheckScreen() {
                 </Text>
               </View>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Quick Add Button */}
-          <Button 
+          <Pressable 
             onPress={() => setShowForm(true)}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 border-0"
+            className="w-full"
           >
-            <View className="flex-row items-center gap-2">
-              <Smile className="w-5 h-5 text-white" />
-              <Text className="font-semibold text-white">✨ Log Current Mood</Text>
-            </View>
-          </Button>
+            <LinearGradient
+              colors={getGradientColors('quickAdd', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='w-full h-12 items-center justify-center rounded-lg'
+            >
+              <View className="flex-row items-center gap-2">
+                <Smile className="w-5 h-5 text-white" />
+                <Text className="font-semibold text-white">✨ Log Current Mood</Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
 
           {/* Today's Summary */}
           {todayLogs.length > 0 && (
-            <Card className="w-full shadow-sm bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-200 dark:border-yellow-800">
+            <Card className="w-full shadow-sm border-yellow-200 dark:border-yellow-800">
+              <LinearGradient
+                colors={getGradientColors('summary', isDarkColorScheme)}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className='rounded-lg'
+              >
               <CardHeader className="pb-4">
                 <CardTitle className="flex-row items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
@@ -371,6 +416,7 @@ export default function MoodCheckScreen() {
                   You're building incredible self-awareness! 🌟
                 </Text>
               </CardContent>
+              </LinearGradient>
             </Card>
           )}
 
@@ -425,7 +471,12 @@ export default function MoodCheckScreen() {
   return (
     <ScrollView className="flex-1 bg-background">
       {/* Header */}
-      <View className="bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-900 dark:to-blue-900 px-6 py-8 pb-12">
+      <LinearGradient
+        colors={getGradientColors('formHeader', isDarkColorScheme)}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="px-6 py-8 pb-12"
+      >
         <View className="flex-row items-center gap-3 mb-4">
           <Smile className="w-6 h-6 text-white" />
           <Text className="text-2xl font-bold text-white">✨ Share Your Feelings</Text>
@@ -436,11 +487,17 @@ export default function MoodCheckScreen() {
         <Text className="text-white/70 dark:text-white/60 text-sm">
           {getCurrentTime()} • {new Date().toLocaleDateString()}
         </Text>
-      </View>
+      </LinearGradient>
 
       <View className="gap-6 p-6 -mt-4">
         {/* Encouragement Card */}
-        <Card className="w-full shadow-sm bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20 border-pink-200 dark:border-pink-800">
+        <Card className="w-full shadow-sm border-pink-200 dark:border-pink-800">
+          <LinearGradient
+            colors={getGradientColors('encouragement', isDarkColorScheme)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className='rounded-lg'
+          >
           <CardContent className="pt-4">
             <View className="flex-row items-center gap-3">
               <Star className="w-6 h-6 text-pink-600 dark:text-pink-400" />
@@ -449,6 +506,7 @@ export default function MoodCheckScreen() {
               </Text>
             </View>
           </CardContent>
+          </LinearGradient>
         </Card>
         {/* Mood Selection */}
         <Card className="w-full shadow-sm border-2 border-pink-200 dark:border-pink-800">
@@ -511,13 +569,18 @@ export default function MoodCheckScreen() {
 
             {/* Contextual Response to Mood Selection */}
             {selectedMood && (
-              <Card className={`mt-4 border-0 ${
-                selectedMood <= 2 
-                  ? 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20' 
-                  : selectedMood === 3
-                  ? 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20'
-                  : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20'
-              }`}>
+              <Card className={`mt-4 border-0`}>
+                <LinearGradient
+                  colors={selectedMood <= 2 
+                    ? getGradientColors('moodResponse', isDarkColorScheme)
+                    : selectedMood === 3
+                    ? getGradientColors('motivational', isDarkColorScheme)
+                    : getGradientColors('encouragement', isDarkColorScheme)
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className='rounded-lg'
+                >
                 <CardContent className="pt-4">
                   <View className="flex-row items-center gap-3">
                     {selectedMood <= 2 ? (
@@ -565,6 +628,7 @@ export default function MoodCheckScreen() {
                     )}
                   </View>
                 </CardContent>
+                </LinearGradient>
               </Card>
             )}
           </CardContent>
@@ -780,11 +844,16 @@ export default function MoodCheckScreen() {
                   ))}
                 </View>
                 {selectedTags.length > 0 && (
-                  <View className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                  <LinearGradient
+                    colors={getGradientColors('tagsSelected', isDarkColorScheme)}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    className="mt-3 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800"
+                  >
                     <Text className="text-indigo-800 dark:text-indigo-200 text-sm font-medium">
                       🎯 Your vibes: {selectedTags.join(', ')} ✨
                     </Text>
-                  </View>
+                  </LinearGradient>
                 )}
               </>
             )}
@@ -816,29 +885,42 @@ export default function MoodCheckScreen() {
               style={{ textAlignVertical: 'top' }}
             />
             {notes.trim().length > 0 && (
-              <View className="mt-3 p-3 bg-gradient-to-r from-teal-50 to-green-50 dark:from-teal-950/20 dark:to-green-950/20 rounded-lg border border-teal-200 dark:border-teal-800">
+              <LinearGradient
+                colors={getGradientColors('notesInput', isDarkColorScheme)}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="mt-3 p-3 rounded-lg border border-teal-200 dark:border-teal-800"
+              >
                 <Text className="text-teal-800 dark:text-teal-200 text-sm font-medium">
                   ✨ Thank you for sharing! Your self-reflection is wonderful.
                 </Text>
-              </View>
+              </LinearGradient>
             )}
           </CardContent>
         </Card>
 
         {/* Action Buttons */}
         <View className="gap-3">
-          <Button 
+          <Pressable 
             onPress={handleSave}
             disabled={selectedMood === null || isLoading}
-            className="w-full bg-gradient-to-r from-green-500 to-blue-500 border-0 py-4"
+            className="w-full"
+            style={{ opacity: selectedMood === null || isLoading ? 0.5 : 1 }}
           >
-            <View className="flex-row items-center gap-2">
-              <Star className="w-5 h-5 text-white" />
-              <Text className="font-semibold text-white text-lg">
-                {isLoading ? '✨ Saving Your Journey...' : '🌟 Complete Check-in'}
-              </Text>
-            </View>
-          </Button>
+            <LinearGradient
+              colors={getGradientColors('quickAdd', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='w-full h-14 items-center justify-center rounded-lg'
+            >
+              <View className="flex-row items-center gap-2">
+                <Star className="w-5 h-5 text-white" />
+                <Text className="font-semibold text-white text-lg">
+                  {isLoading ? '✨ Saving Your Journey...' : '🌟 Complete Check-in'}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
           
           <Button 
             variant="outline"
@@ -850,7 +932,13 @@ export default function MoodCheckScreen() {
         </View>
 
         {/* Bottom Encouragement */}
-        <Card className="w-full shadow-sm bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+        <Card className="w-full shadow-sm border-blue-200 dark:border-blue-800">
+          <LinearGradient
+            colors={getGradientColors('bottomEncouragement', isDarkColorScheme)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className='rounded-lg'
+          >
           <CardContent className="pt-4">
             <Text className="text-center text-blue-800 dark:text-blue-200 font-medium">
               🎉 You're amazing for taking care of your mental health! 
@@ -859,6 +947,7 @@ export default function MoodCheckScreen() {
               Small steps lead to big victories! 🏆
             </Text>
           </CardContent>
+          </LinearGradient>
         </Card>
 
         {/* Bottom spacing */}

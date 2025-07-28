@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, ScrollView, TextInput, Pressable } from 'react-native';
-import { Button } from '../../components/ui/button';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useDatabase, useSleepLogs } from '../../lib/hooks/useDatabase';
+import { useColorScheme } from '../../lib/useColorScheme';
 import { SleepLog } from '../../lib/database/types';
 import { Moon } from '../../lib/icons/Moon';
 import { MoonStar } from '../../lib/icons/MoonStar';
@@ -38,6 +39,7 @@ const getSleepQualityIcon = (quality: number) => {
 };
 
 export default function SleepLogScreen() {
+  const { isDarkColorScheme } = useColorScheme();
   const { isInitialized } = useDatabase();
   const { createSleepLog, getTodaySleepLog, getSleepStreak, loading: sleepLoading } = useSleepLogs();
   
@@ -57,6 +59,23 @@ export default function SleepLogScreen() {
   const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState('');
   const [sleepStreak, setSleepStreak] = React.useState<number>(0);
+
+  // Helper function for theme-aware gradients
+  const getGradientColors = (type: 'header' | 'formHeader' | 'motivational' | 'summary' | 'encouragement' | 'sleepLogged' | 'sleepTips' | 'quickAdd' | 'bottomEncouragement' | 'insights', isDark: boolean = false) => {
+    const gradients = {
+      header: isDark ? ['#312e81', '#581c87'] as const : ['#6366f1', '#8b5cf6'] as const,
+      formHeader: isDark ? ['#581c87', '#312e81'] as const : ['#8b5cf6', '#6366f1'] as const,
+      motivational: isDark ? ['#581c87', '#312e81'] as const : ['#f3e8ff', '#e0e7ff'] as const,
+      summary: isDark ? ['#1e40af', '#581c87'] as const : ['#dbeafe', '#f3e8ff'] as const,
+      encouragement: isDark ? ['#be185d', '#ec4899'] as const : ['#fdf2f8', '#fce7f3'] as const,
+      sleepLogged: isDark ? ['#166534', '#0f766e'] as const : ['#f0fdf4', '#f0fdfa'] as const,
+      sleepTips: isDark ? ['#0f766e', '#0891b2'] as const : ['#f0fdfa', '#ecfeff'] as const,
+      quickAdd: isDark ? ['#312e81', '#581c87'] as const : ['#6366f1', '#8b5cf6'] as const,
+      bottomEncouragement: isDark ? ['#581c87', '#7c3aed'] as const : ['#f3e8ff', '#ede9fe'] as const,
+      insights: isDark ? ['#16a34a', '#059669'] as const : ['#dcfce7', '#d1fae5'] as const
+    };
+    return gradients[type];
+  };
 
   // Load today's sleep log when component mounts or database is ready
   React.useEffect(() => {
@@ -211,7 +230,13 @@ export default function SleepLogScreen() {
     const quality = sleepQualityOptions.find(q => q.value === todaySleepLog.sleepQuality);
     
     return (
-      <Card className="w-full shadow-sm bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+      <Card className="w-full shadow-sm border-blue-200 dark:border-blue-800">
+        <LinearGradient
+          colors={getGradientColors('summary', isDarkColorScheme)}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className='rounded-lg'
+        >
         <CardContent className="pt-4">
           <View className="flex-row items-center gap-3 mb-3">
             <MoonStar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -253,6 +278,7 @@ export default function SleepLogScreen() {
             </View>
           </View>
         </CardContent>
+        </LinearGradient>
       </Card>
     );
   };
@@ -285,7 +311,12 @@ export default function SleepLogScreen() {
         )}
 
         {/* Header */}
-        <View className="bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-900 dark:to-purple-900 px-6 py-8 pb-12">
+        <LinearGradient
+          colors={getGradientColors('header', isDarkColorScheme)}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="px-6 py-8 pb-12"
+        >
           <View className="flex-row items-center gap-3 mb-4">
             <MoonStar className="w-6 h-6 text-white" />
             <Text className="text-2xl font-bold text-white">Sleep Tracking</Text>
@@ -296,11 +327,17 @@ export default function SleepLogScreen() {
           <Text className="text-white/70 dark:text-white/60 text-sm">
             {getCurrentTime()} • {new Date().toLocaleDateString()}
           </Text>
-        </View>
+        </LinearGradient>
 
         <View className="gap-6 p-6 -mt-4">
           {/* Motivational Card */}
-          <Card className="w-full shadow-sm bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 border-purple-200 dark:border-purple-800">
+          <Card className="w-full shadow-sm border-purple-200 dark:border-purple-800">
+            <LinearGradient
+              colors={getGradientColors('motivational', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardContent className="pt-4">
               <View className="flex-row items-center gap-3 mb-2">
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -312,27 +349,42 @@ export default function SleepLogScreen() {
                 Quality sleep is the foundation of a healthy, happy life! Every night matters. 🌙✨
               </Text>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Today's Sleep Summary */}
           {todaySleepLog && renderSleepSummary()}
 
           {/* Quick Add Button */}
-          <Button 
+          <Pressable 
             onPress={() => setShowForm(true)}
-            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 border-0"
             disabled={todaySleepLog !== null}
+            className="w-full"
+            style={{ opacity: todaySleepLog !== null ? 0.5 : 1 }}
           >
-            <View className="flex-row items-center gap-2">
-              <Moon className="w-5 h-5 text-white" />
-              <Text className="text-white text-lg font-medium">
-                {todaySleepLog ? "Sleep Already Logged Today! 🌟" : "Log Last Night's Sleep 💤"}
-              </Text>
-            </View>
-          </Button>
+            <LinearGradient
+              colors={getGradientColors('quickAdd', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='w-full h-14 items-center justify-center rounded-lg'
+            >
+              <View className="flex-row items-center gap-2">
+                <Moon className="w-5 h-5 text-white" />
+                <Text className="text-white text-lg font-medium">
+                  {todaySleepLog ? "Sleep Already Logged Today! 🌟" : "Log Last Night's Sleep 💤"}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
 
           {todaySleepLog && (
-            <Card className="w-full shadow-sm bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20 border-green-200 dark:border-green-800">
+            <Card className="w-full shadow-sm border-green-200 dark:border-green-800">
+              <LinearGradient
+                colors={getGradientColors('sleepLogged', isDarkColorScheme)}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className='rounded-lg'
+              >
               <CardContent className="pt-4">
                 <View className="flex-row items-center gap-3 mb-2">
                   <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -344,11 +396,18 @@ export default function SleepLogScreen() {
                   Fantastic! You've already tracked your sleep today. Keep building those healthy habits! Tomorrow's another opportunity for great rest! 🌟
                 </Text>
               </CardContent>
+              </LinearGradient>
             </Card>
           )}
 
           {/* Sleep Tips Card */}
-          <Card className="w-full shadow-sm bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-950/20 dark:to-cyan-950/20 border-teal-200 dark:border-teal-800">
+          <Card className="w-full shadow-sm border-teal-200 dark:border-teal-800">
+            <LinearGradient
+              colors={getGradientColors('sleepTips', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardContent className="pt-4">
               <View className="flex-row items-center gap-3 mb-3">
                 <Sun className="w-6 h-6 text-teal-600 dark:text-teal-400" />
@@ -371,6 +430,7 @@ export default function SleepLogScreen() {
                 </Text>
               </View>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Bottom spacing */}
@@ -384,7 +444,12 @@ export default function SleepLogScreen() {
   return (
     <ScrollView className="flex-1 bg-background">
       {/* Header */}
-      <View className="bg-gradient-to-r from-purple-500 to-indigo-500 dark:from-purple-900 dark:to-indigo-900 px-6 py-8 pb-12">
+      <LinearGradient
+        colors={getGradientColors('formHeader', isDarkColorScheme)}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="px-6 py-8 pb-12"
+      >
         <View className="flex-row items-center gap-3 mb-4">
           <MoonStar className="w-6 h-6 text-white" />
           <Text className="text-2xl font-bold text-white">✨ Track Your Sleep</Text>
@@ -395,11 +460,17 @@ export default function SleepLogScreen() {
         <Text className="text-white/70 dark:text-white/60 text-sm">
           {getCurrentTime()} • {new Date().toLocaleDateString()}
         </Text>
-      </View>
+      </LinearGradient>
 
       <View className="gap-6 p-6 -mt-4">
         {/* Encouragement Card */}
-        <Card className="w-full shadow-sm bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 border-pink-200 dark:border-pink-800">
+        <Card className="w-full shadow-sm border-pink-200 dark:border-pink-800">
+          <LinearGradient
+            colors={getGradientColors('encouragement', isDarkColorScheme)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className='rounded-lg'
+          >
           <CardContent className="pt-4">
             <View className="flex-row items-center gap-3">
               <Star className="w-6 h-6 text-pink-600 dark:text-pink-400" />
@@ -411,6 +482,7 @@ export default function SleepLogScreen() {
               Taking time to track your sleep shows incredible self-care! Every detail helps build better rest habits. 💤✨
             </Text>
           </CardContent>
+          </LinearGradient>
         </Card>
 
         {/* Sleep Times */}
@@ -644,39 +716,51 @@ export default function SleepLogScreen() {
 
         {/* Action Buttons */}
         <View className="gap-3">
-          <Button 
+          <Pressable 
             onPress={handleSave}
             disabled={!bedTime || !wakeTime || sleepQuality === null || isLoading}
-            className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 border-0 py-4"
+            className="w-full"
+            style={{ opacity: !bedTime || !wakeTime || sleepQuality === null || isLoading ? 0.5 : 1 }}
           >
-            <View className="flex-row items-center gap-2">
-              <MoonStar className="w-5 h-5 text-white" />
-              <Text className="text-white text-lg font-medium">
-                {isLoading ? "Saving Your Sleep... 💤" : "Save Sleep Log 🌟"}
-              </Text>
-            </View>
-          </Button>
+            <LinearGradient
+              colors={getGradientColors('quickAdd', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='w-full h-14 items-center justify-center rounded-lg'
+            >
+              <View className="flex-row items-center gap-2">
+                <MoonStar className="w-5 h-5 text-white" />
+                <Text className="text-white text-lg font-medium">
+                  {isLoading ? "Saving Your Sleep... 💤" : "Save Sleep Log 🌟"}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
           
-          <Button 
-            variant="outline"
+          <Pressable 
             onPress={() => setShowForm(false)}
-            className="w-full border-2 border-gray-300 dark:border-gray-600"
+            className="w-full"
           >
-            <Text className="text-lg">Maybe Later 💙</Text>
-          </Button>
+            <View className="w-full border-2 border-gray-300 dark:border-gray-600 py-3 rounded-lg items-center justify-center bg-white dark:bg-gray-900/50">
+              <Text className="text-lg text-gray-700 dark:text-gray-300">Maybe Later 💙</Text>
+            </View>
+          </Pressable>
         </View>
 
         {/* Bottom Encouragement */}
-        <Card className="w-full shadow-sm bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
-          <CardContent className="pt-4">
-            <Text className="text-center text-purple-800 dark:text-purple-200 font-medium">
-              🎉 You're incredible for prioritizing your sleep health! 
-            </Text>
-            <Text className="text-center text-purple-600 dark:text-purple-300 text-sm mt-1">
-              Every night tracked is a step toward better rest and wellness! 🌙⭐
-            </Text>
-          </CardContent>
-        </Card>
+        <LinearGradient
+          colors={getGradientColors('insights', isDarkColorScheme)}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className='w-full shadow-sm p-4 rounded-lg'
+        >
+          <Text className={`text-center font-medium ${isDarkColorScheme ? 'text-white' : 'text-green-800'}`}>
+            🎉 You're incredible for prioritizing your sleep health! 
+          </Text>
+          <Text className={`text-center text-sm mt-1 ${isDarkColorScheme ? 'text-white/90' : 'text-green-700'}`}>
+            Every night tracked is a step toward better rest and wellness! 🌙⭐
+          </Text>
+        </LinearGradient>
 
         {/* Bottom spacing */}
         <View className="h-8" />
