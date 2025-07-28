@@ -1,5 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 import { SleepLog } from '../types';
+import { StreakService } from './streaks';
 
 export class SleepLogService {
   constructor(private db: SQLiteDatabase) {}
@@ -41,6 +42,10 @@ export class SleepLogService {
           newEntry.updatedAt
         ]
       );
+
+      // Update sleep tracking streak
+      const streakService = new StreakService(this.db);
+      await streakService.updateSleepStreak();
 
       return newEntry;
     } catch (error) {

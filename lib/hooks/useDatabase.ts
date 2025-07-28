@@ -157,6 +157,18 @@ export function useSleepLogs() {
     }
   };
 
+  const getSleepStreak = async () => {
+    try {
+      const manager = DatabaseManager.getInstance();
+      const streakService = new StreakService(manager.getDatabase());
+      const streak = await streakService.getStreakByType('sleep');
+      return streak?.currentStreak || 0;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to get sleep streak');
+      return 0;
+    }
+  };
+
   return {
     sleepLogs,
     loading,
@@ -164,7 +176,8 @@ export function useSleepLogs() {
     loadRecentLogs,
     createSleepLog,
     getTodaySleepLog,
-    getSleepStats
+    getSleepStats,
+    getSleepStreak
   };
 }
 

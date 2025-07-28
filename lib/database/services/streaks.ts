@@ -142,4 +142,66 @@ export class StreakService {
 
     return streak;
   }
+
+  /**
+   * Update sleep tracking streak - for tracking consecutive days of sleep logging
+   */
+  async updateSleepStreak(): Promise<Streak> {
+    const today = new Date().toISOString().split('T')[0];
+    const behaviorType = 'sleep';
+    
+    let streak = await this.getStreakByType(behaviorType);
+    
+    if (!streak) {
+      // Create new streak
+      const id = `streak-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      streak = {
+        id,
+        behaviorType,
+        currentStreak: 1,
+        longestStreak: 1,
+        lastResetDate: null,
+        startDate: today,
+        updatedAt: new Date().toISOString()
+      };
+    } else {
+      // Check if we already logged today
+      const lastUpdate = streak.updatedAt?.split('T')[0];
+      if (lastUpdate === today) {
+        // Already logged today, just return current streak
+        return streak;
+      }
+
+      // Check if it's a consecutive day
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      if (lastUpdate === yesterdayStr) {
+        // Consecutive day - increment streak
+        streak.currentStreak += 1;
+        if (streak.currentStreak > streak.longestStreak) {
+          streak.longestStreak = streak.currentStreak;
+        }
+      } else {
+        // Gap in logging - reset streak
+        streak.currentStreak = 1;
+        streak.lastResetDate = today;
+      }
+      
+      streak.updatedAt = new Date().toISOString();
+    }
+
+    await this.db.runAsync(`
+      INSERT OR REPLACE INTO streaks (
+        id, behavior_type, current_streak, longest_streak, 
+        last_reset_date, start_date, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      streak.id, streak.behaviorType, streak.currentStreak,
+      streak.longestStreak, streak.lastResetDate, streak.startDate, streak.updatedAt
+    ]);
+
+    return streak;
+  }
 }

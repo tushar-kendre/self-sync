@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { Home, AlertTriangle, CheckCircle, BookOpen, Smile, BarChart3 } from 'lucide-react-native';
+import { Home, AlertTriangle, CheckCircle, BookOpen, Smile, BarChart3, MoonStar } from 'lucide-react-native';
 
 export default function TabLayout() {
   const { isDarkColorScheme } = useColorScheme();
@@ -25,6 +25,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="mood-check"
+        options={{
+          title: 'Mood',
+          tabBarIcon: ({ color, size }) => <Smile size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sleep-log"
+        options={{
+          title: 'Sleep',
+          tabBarIcon: ({ color, size }) => <MoonStar size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="addiction-log"
         options={{
           title: 'Addiction Log',
@@ -45,13 +59,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="mood-check"
-        options={{
-          title: 'Mood',
-          tabBarIcon: ({ color, size }) => <Smile size={size} color={color} />,
-        }}
-      />
+      
       <Tabs.Screen
         name="insights"
         options={{

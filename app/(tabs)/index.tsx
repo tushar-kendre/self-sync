@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '~/components/ui/button';
 import {
   Card,
@@ -12,6 +13,7 @@ import { Text } from '~/components/ui/text';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { WelcomeDialog } from '~/components/WelcomeDialog';
 import { useDatabase, useStreaks, useMoodLogs, useSleepLogs, useUserSettings, useAddictionLogs, useDashboardData, useJournal } from '~/lib/hooks/useDatabase'
+import { useColorScheme } from '~/lib/useColorScheme';
 import type { MoodLog, SleepLog } from '~/lib/database/types';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -36,6 +38,7 @@ import { Flame } from '~/lib/icons/Flame';
 import { ClipboardList } from '~/lib/icons/ClipboardList';
 
 export default function Screen() {
+  const { isDarkColorScheme } = useColorScheme();
   const { isInitialized, isInitializing, error: dbError, retry } = useDatabase();
   const { streaks, loadAllStreaks, loading: streaksLoading } = useStreaks();
   const { getTodayMoodLogs } = useMoodLogs();
@@ -134,7 +137,7 @@ export default function Screen() {
           break;
         case 'sleep':
           // For now, create a simple sleep log - in a real app this would navigate to a form
-          console.log('Opening sleep logging screen');
+          router.push('/(tabs)/sleep-log')
           break;
         case 'addiction':
           router.push('/(tabs)/addiction-log');
@@ -154,20 +157,65 @@ export default function Screen() {
   };
 
   const getRecentEntries = () => {
-    const entries: Array<{type: string, value: string, time: string, color: string}> = [];
+    const entries: Array<{type: string, value: string, time: string, color: string, timestamp: string}> = [];
     
-    // Add recent mood logs
-    if (dashboardData?.recentMoodLogs) {
-      dashboardData.recentMoodLogs.slice(0, 2).forEach((log: any) => {
-        const timeAgo = getTimeAgo(log.timestamp);
-        const moodEmoji = getMoodEmoji(log.mood);
-        entries.push({
-          type: 'mood',
-          value: `${moodEmoji} Mood: ${log.mood}/5`,
-          time: timeAgo,
-          color: 'bg-blue-50 border-blue-200'
-        });
+    // Add today's mood logs from local state
+    todayMoodLogs.forEach((log: MoodLog) => {
+      const timeAgo = getTimeAgo(log.timestamp);
+      const moodEmoji = getMoodEmoji(log.mood);
+      entries.push({
+        type: 'mood',
+        value: `${moodEmoji} Mood: ${log.mood}/5`,
+        time: timeAgo,
+        color: 'bg-blue-50 border-blue-200',
+        timestamp: log.timestamp
       });
+    });
+    
+    // Add today's sleep from local state
+    if (todaySleep) {
+      const timeAgo = getTimeAgo(todaySleep.timestamp);
+      entries.push({
+        type: 'sleep',
+        value: `😴 ${todaySleep.sleepDurationHours}h sleep`,
+        time: timeAgo,
+        color: 'bg-purple-50 border-purple-200',
+        timestamp: todaySleep.timestamp
+      });
+    }
+    
+    // Add today's journal from local state
+    if (todayJournal) {
+      const timeAgo = getTimeAgo(todayJournal.createdAt);
+      const excerpt = todayJournal.content && todayJournal.content.length > 30 
+        ? todayJournal.content.substring(0, 30) + '...' 
+        : todayJournal.content || 'Journal entry';
+      entries.push({
+        type: 'journal',
+        value: `📖 "${excerpt}"`,
+        time: timeAgo,
+        color: 'bg-green-50 border-green-200',
+        timestamp: todayJournal.createdAt
+      });
+    }
+    
+    // Add recent mood logs from dashboard data (for previous days)
+    if (dashboardData?.recentMoodLogs) {
+      const today = new Date().toISOString().split('T')[0];
+      dashboardData.recentMoodLogs
+        .filter((log: any) => !log.timestamp.startsWith(today)) // Exclude today's logs to avoid duplicates
+        .slice(0, 1)
+        .forEach((log: any) => {
+          const timeAgo = getTimeAgo(log.timestamp);
+          const moodEmoji = getMoodEmoji(log.mood);
+          entries.push({
+            type: 'mood',
+            value: `${moodEmoji} Mood: ${log.mood}/5`,
+            time: timeAgo,
+            color: 'bg-blue-50 border-blue-200',
+            timestamp: log.timestamp
+          });
+        });
     }
     
     // Add recent sleep logs
@@ -178,7 +226,8 @@ export default function Screen() {
           type: 'sleep',
           value: `� ${log.sleepDurationHours}h sleep`,
           time: timeAgo,
-          color: 'bg-purple-50 border-purple-200'
+          color: 'bg-purple-50 border-purple-200',
+          timestamp: log.timestamp
         });
       });
     }
@@ -194,13 +243,16 @@ export default function Screen() {
             type: 'addiction',
             value: `🎯 Resisted ${log.substanceType || 'urge'}`,
             time: timeAgo,
-            color: 'bg-orange-50 border-orange-200'
+            color: 'bg-orange-50 border-orange-200',
+            timestamp: log.loggedAt
           });
         });
     }
     
-    // Sort by most recent and return top 4
-    return entries.slice(0, 4);
+    // Sort by most recent timestamp and return top 4
+    return entries
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 4);
   };
 
   const getTimeAgo = (timestamp: string) => {
@@ -273,14 +325,114 @@ export default function Screen() {
 
   const getStreakIcon = (behaviorType: string) => {
     const icons = {
+      // Addiction/resistance streaks
       porn: Shield,
       reels: Smartphone,
       binge: UtensilsCrossed,
       smoke: Cigarette,
       weed: Leaf,
-      internet: Monitor
+      internet: Monitor,
+      // Positive habit streaks
+      mood_logging: Smile,
+      journal: BookOpen,
+      exercise: Activity,
+      meditation: Star,
+      sleep: Moon,
+      hydration: Activity
     };
     return icons[behaviorType as keyof typeof icons] || Target;
+  };
+
+  const getStreakStyle = (behaviorType: string, isDark: boolean = false) => {
+    const styles = {
+      // Addiction/resistance streaks - orange/red theme (challenging behaviors to resist)
+      porn: { 
+        colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fecaca'] as const, 
+        border: 'border-orange-200 dark:border-orange-800' 
+      },
+      reels: { 
+        colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fecaca'] as const, 
+        border: 'border-orange-200 dark:border-orange-800' 
+      },
+      binge: { 
+        colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fecaca'] as const, 
+        border: 'border-orange-200 dark:border-orange-800' 
+      },
+      smoke: { 
+        colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fecaca'] as const, 
+        border: 'border-orange-200 dark:border-orange-800' 
+      },
+      weed: { 
+        colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fecaca'] as const, 
+        border: 'border-orange-200 dark:border-orange-800' 
+      },
+      internet: { 
+        colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fecaca'] as const, 
+        border: 'border-orange-200 dark:border-orange-800' 
+      },
+      // Positive habit streaks - green/blue theme (healthy behaviors to maintain)
+      mood_logging: { 
+        colors: isDark ? ['#1e3a8a', '#3730a3'] as const : ['#dbeafe', '#e9d5ff'] as const, 
+        border: 'border-blue-200 dark:border-blue-800' 
+      },
+      journal: { 
+        colors: isDark ? ['#14532d', '#166534'] as const : ['#dcfce7', '#d1fae5'] as const, 
+        border: 'border-green-200 dark:border-green-800' 
+      },
+      exercise: { 
+        colors: isDark ? ['#134e4a', '#0f766e'] as const : ['#ccfbf1', '#cffafe'] as const, 
+        border: 'border-teal-200 dark:border-teal-800' 
+      },
+      meditation: { 
+        colors: isDark ? ['#581c87', '#6b21a8'] as const : ['#e9d5ff', '#e0e7ff'] as const, 
+        border: 'border-purple-200 dark:border-purple-800' 
+      },
+      sleep: { 
+        colors: isDark ? ['#312e81', '#3730a3'] as const : ['#e0e7ff', '#e9d5ff'] as const, 
+        border: 'border-indigo-200 dark:border-indigo-800' 
+      },
+      hydration: { 
+        colors: isDark ? ['#155e75', '#0e7490'] as const : ['#cffafe', '#dbeafe'] as const, 
+        border: 'border-cyan-200 dark:border-cyan-800' 
+      }
+    };
+    return styles[behaviorType as keyof typeof styles] || { 
+      colors: isDark ? ['#431407', '#7c2d12'] as const : ['#fed7aa', '#fef3c7'] as const, 
+      border: 'border-orange-200 dark:border-orange-800' 
+    };
+  };
+
+  const getStreakTextColor = (behaviorType: string) => {
+    const colors = {
+      // Addiction/resistance streaks
+      porn: 'text-orange-600 dark:text-orange-400',
+      reels: 'text-orange-600 dark:text-orange-400',
+      binge: 'text-orange-600 dark:text-orange-400',
+      smoke: 'text-orange-600 dark:text-orange-400',
+      weed: 'text-orange-600 dark:text-orange-400',
+      internet: 'text-orange-600 dark:text-orange-400',
+      // Positive habit streaks
+      mood_logging: 'text-blue-600 dark:text-blue-400',
+      journal: 'text-green-600 dark:text-green-400',
+      exercise: 'text-teal-600 dark:text-teal-400',
+      meditation: 'text-purple-600 dark:text-purple-400',
+      sleep: 'text-indigo-600 dark:text-indigo-400',
+      hydration: 'text-cyan-600 dark:text-cyan-400'
+    };
+    return colors[behaviorType as keyof typeof colors] || 'text-orange-600 dark:text-orange-400';
+  };
+
+  const getCardGradient = (theme: 'welcome' | 'celebration' | 'quickActions' | 'progress' | 'timeline' | 'streaks' | 'journal', isDark: boolean = false) => {
+    const gradients = {
+      welcome: isDark ? ['#064e3b', '#1e40af'] as const : ['#f0fdf4', '#dbeafe'] as const,
+      celebration: isDark ? ['#451a03', '#7c2d12'] as const : ['#fefce8', '#fed7aa'] as const,
+      quickActions: isDark ? ['#581c87', '#6b21a8'] as const : ['#faf5ff', '#e9d5ff'] as const,
+      progress: isDark ? ['#831843', '#be185d'] as const : ['#fdf2f8', '#fce7f3'] as const,
+      timeline: isDark ? ['#312e81', '#3730a3'] as const : ['#eef2ff', '#e0e7ff'] as const,
+      streaks: isDark ? ['#451a03', '#78350f'] as const : ['#fffbeb', '#fef3c7'] as const,
+      journal: isDark ? ['#064e3b', '#065f46'] as const : ['#ecfdf5', '#d1fae5'] as const
+    };
+    return gradients[theme];
   };
 
   const getMoodEmoji = (mood: number) => {
@@ -354,7 +506,12 @@ export default function Screen() {
       />
       
       {/* Header */}
-      <View className='bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-900 dark:to-pink-900 px-6 py-8 pb-16'>
+      <LinearGradient
+        colors={isDarkColorScheme ? ['#581c87', '#831843'] : ['#a855f7', '#ec4899']} // dark: purple-900 to pink-900, light: purple-500 to pink-500
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className='px-6 py-8 pb-16'
+      >
         <View className='flex-row items-center justify-between mb-6'>
           <View className='flex-row items-center gap-3'>
             <Star className="w-6 h-6 text-white" />
@@ -401,7 +558,7 @@ export default function Screen() {
         </View>
 
         {/* Wellness Score */}
-        <Card className='bg-white/15 dark:bg-white/10 backdrop-blur border-white/30 dark:border-white/20'>
+        <Card className='bg-white/15 dark:bg-white/10 border-white/30 dark:border-white/20'>
           <CardContent className='pt-6'>
             <View className='flex-row items-center justify-between'>
               <View className='flex-1'>
@@ -428,7 +585,7 @@ export default function Screen() {
             </View>
           </CardContent>
         </Card>
-      </View>
+      </LinearGradient>
       
       <ScrollView 
         className='flex-1 bg-secondary/30 -mt-8'
@@ -445,7 +602,13 @@ export default function Screen() {
           
           {/* Motivational Welcome Card */}
           {todayMoodLogs.length === 0 && !todaySleep && !todayJournal && (
-            <Card className='w-full shadow-sm bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30 border-green-200 dark:border-green-800'>
+            <Card className='w-full shadow-sm border-green-200 dark:border-green-800'>
+              <LinearGradient
+                colors={getCardGradient('welcome', isDarkColorScheme)}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className='rounded-lg'
+              >
               <CardContent className='pt-4'>
                 <View className='items-center py-4'>
                   <Text className='text-6xl mb-4'>🌱</Text>
@@ -457,12 +620,19 @@ export default function Screen() {
                   </Text>
                 </View>
               </CardContent>
+              </LinearGradient>
             </Card>
           )}
 
           {/* Progress Celebration Card */}
           {(todayMoodLogs.length > 0 || todaySleep || todayJournal) && (
-            <Card className='w-full shadow-sm bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/30 dark:to-orange-950/30 border-yellow-200 dark:border-yellow-800'>
+            <Card className='w-full shadow-sm border-yellow-200 dark:border-yellow-800'>
+              <LinearGradient
+                colors={getCardGradient('celebration', isDarkColorScheme)}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className='rounded-lg'
+              >
               <CardContent className='pt-4'>
                 <View className='flex-row items-center gap-3'>
                   <Text className='text-3xl'>🎉</Text>
@@ -479,11 +649,18 @@ export default function Screen() {
                   </View>
                 </View>
               </CardContent>
+              </LinearGradient>
             </Card>
           )}
 
           {/* Quick Tracker Actions - Mobile Optimized */}
           <Card className='w-full shadow-sm border-2 border-purple-200 dark:border-purple-800'>
+            <LinearGradient
+              colors={getCardGradient('quickActions', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardHeader className='pb-3'>
               <CardTitle className='flex-row items-center gap-2'>
                 <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -502,7 +679,7 @@ export default function Screen() {
                       key={action.id}
                       variant="outline"
                       onPress={action.action}
-                      className={`flex-1 min-w-[30%] max-w-[48%] h-20 flex-col gap-1 border-2 ${action.color.replace('bg-', 'bg-').replace('border-', 'border-')} dark:bg-muted/20 dark:border-muted hover:scale-105 transform transition-all`}
+                      className={`flex-1 min-w-[30%] max-w-[48%] h-20 flex-col gap-1 border-2 ${action.color.replace('bg-', 'bg-').replace('border-', 'border-')} dark:bg-muted/20 dark:border-muted`}
                     >
                       <IconComponent className="w-6 h-6 text-foreground" />
                       <Text className='text-xs font-bold text-foreground'>{action.title}</Text>
@@ -512,10 +689,17 @@ export default function Screen() {
                 })}
               </View>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Today's Progress Overview */}
           <Card className='w-full shadow-sm border-2 border-pink-200 dark:border-pink-800'>
+            <LinearGradient
+              colors={getCardGradient('progress', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardHeader className='pb-3'>
               <CardTitle className='flex-row items-center gap-2'>
                 <BarChart3 className="w-5 h-5 text-pink-600 dark:text-pink-400" />
@@ -527,7 +711,7 @@ export default function Screen() {
             </CardHeader>
             <CardContent className='pt-0'>
               <View className='flex-row gap-2'>
-                <Card className='flex-1 items-center p-3 bg-gradient-to-b from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-950/50 border-2 border-blue-200 dark:border-blue-800'>
+                <Card className='flex-1 items-center p-3 bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800'>
                   <Smile className="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" />
                   <Text className='text-xs text-blue-600 dark:text-blue-400 font-bold'>Mood</Text>
                   <Text className='font-bold text-lg text-blue-800 dark:text-blue-200'>
@@ -540,7 +724,7 @@ export default function Screen() {
                     {todayMoodLogs.length > 0 ? `${todayMoodLogs.length} check-ins! 🌟` : 'Ready to share? 💫'}
                   </Text>
                 </Card>
-                <Card className='flex-1 items-center p-3 bg-gradient-to-b from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-950/50 border-2 border-purple-200 dark:border-purple-800'>
+                <Card className='flex-1 items-center p-3 bg-purple-50 dark:bg-purple-950/30 border-2 border-purple-200 dark:border-purple-800'>
                   <Moon className="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
                   <Text className='text-xs text-purple-600 dark:text-purple-400 font-bold'>Sleep</Text>
                   <Text className='font-bold text-lg text-purple-800 dark:text-purple-200'>
@@ -552,7 +736,7 @@ export default function Screen() {
                 </Card>
               </View>
               <View className='flex-row gap-2 mt-2'>
-                <Card className='flex-1 items-center p-3 bg-gradient-to-b from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-950/50 border-2 border-green-200 dark:border-green-800'>
+                <Card className='flex-1 items-center p-3 bg-green-50 dark:bg-green-950/30 border-2 border-green-200 dark:border-green-800'>
                   <Activity className="w-8 h-8 text-green-600 dark:text-green-400 mb-2" />
                   <Text className='text-xs text-green-600 dark:text-green-400 font-bold'>Total Logs</Text>
                   <Text className='font-bold text-lg text-green-800 dark:text-green-200'>
@@ -562,7 +746,7 @@ export default function Screen() {
                     Amazing dedication! 🎯
                   </Text>
                 </Card>
-                <Card className='flex-1 items-center p-3 bg-gradient-to-b from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-950/50 border-2 border-orange-200 dark:border-orange-800'>
+                <Card className='flex-1 items-center p-3 bg-orange-50 dark:bg-orange-950/30 border-2 border-orange-200 dark:border-orange-800'>
                   <Target className="w-8 h-8 text-orange-600 dark:text-orange-400 mb-2" />
                   <Text className='text-xs text-orange-600 dark:text-orange-400 font-bold'>Wins Today</Text>
                   <Text className='font-bold text-lg text-orange-800 dark:text-orange-200'>
@@ -577,10 +761,17 @@ export default function Screen() {
                 </Card>
               </View>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Recent Activity Timeline */}
           <Card className='w-full shadow-sm border-2 border-indigo-200 dark:border-indigo-800'>
+            <LinearGradient
+              colors={getCardGradient('timeline', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardHeader className='pb-3'>
               <CardTitle className='flex-row items-center justify-between'>
                 <View className='flex-row items-center gap-2'>
@@ -600,9 +791,9 @@ export default function Screen() {
                 {getRecentEntries().slice(0, 4).map((entry, index) => (
                   <View 
                     key={index}
-                    className='flex-row items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-2 border-indigo-100 dark:border-indigo-800'
+                    className='flex-row items-center gap-3 p-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 border-2 border-indigo-100 dark:border-indigo-800'
                   >
-                    <View className='w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 items-center justify-center border-2 border-indigo-200 dark:border-indigo-700'>
+                    <View className='w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 items-center justify-center border-2 border-indigo-200 dark:border-indigo-700'>
                       <Text className='text-sm'>{entry.type === 'mood' ? '😊' : 
                                                   entry.type === 'sleep' ? '😴' : 
                                                   entry.type === 'activity' ? '🏃' : '🎯'}</Text>
@@ -618,7 +809,7 @@ export default function Screen() {
                 ))}
                 
                 {getRecentEntries().length === 0 && (
-                  <View className='items-center py-6 bg-gradient-to-b from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-lg border-2 border-rose-200 dark:border-rose-800'>
+                  <View className='items-center py-6 bg-rose-50 dark:bg-rose-950/30 rounded-lg border-2 border-rose-200 dark:border-rose-800'>
                     <Star className="w-12 h-12 text-rose-600 dark:text-rose-400 mb-2" />
                     <Text className='font-bold mb-1 text-rose-800 dark:text-rose-200'>Your Story Starts Here! 🌟</Text>
                     <Text className='text-sm text-rose-600 dark:text-rose-400 text-center'>
@@ -628,10 +819,17 @@ export default function Screen() {
                 )}
               </View>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Active Streaks */}
           <Card className='w-full shadow-sm border-2 border-yellow-200 dark:border-yellow-800'>
+            <LinearGradient
+              colors={getCardGradient('streaks', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardHeader className='pb-3'>
               <CardTitle className='flex-row items-center justify-between'>
                 <View className='flex-row items-center gap-2'>
@@ -659,22 +857,27 @@ export default function Screen() {
                     .slice(0, 6)
                     .map((streak) => {
                       const IconComponent = getStreakIcon(streak.behaviorType);
+                      const streakStyle = getStreakStyle(streak.behaviorType, isDarkColorScheme);
+                      const textColor = getStreakTextColor(streak.behaviorType);
                       return (
-                        <View 
+                        <LinearGradient 
                           key={streak.id} 
-                          className='flex-row items-center gap-2 bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-950/50 dark:to-yellow-950/50 border-2 border-orange-200 dark:border-orange-800 rounded-full px-3 py-2 flex-1 min-w-[45%]'
+                          colors={streakStyle.colors}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          className={`flex-row items-center gap-2 ${streakStyle.border} rounded-full px-3 py-2 flex-1 min-w-[45%] border`}
                         >
-                          <IconComponent className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                          <Text className='text-sm font-bold text-orange-800 dark:text-orange-200'>{streak.currentStreak}</Text>
-                          <Text className='text-xs text-orange-600 dark:text-orange-400'>
+                          <IconComponent className={`w-4 h-4 ${textColor}`} />
+                          <Text className={`text-sm font-bold ${textColor.replace('text-', 'text-').replace('-400', '-800').replace('-600', '-800')} dark:${textColor.replace('text-', 'text-').replace('-400', '-200').replace('-600', '-200')}`}>{streak.currentStreak}</Text>
+                          <Text className={`text-xs ${textColor}`}>
                             {streak.currentStreak === 1 ? 'day! 🎉' : 'days! 🚀'}
                           </Text>
-                        </View>
+                        </LinearGradient>
                       );
                     })}
                 </View>
               ) : (
-                <View className='items-center py-6 bg-gradient-to-b from-pink-50 to-purple-50 dark:from-pink-950/30 dark:to-purple-950/30 rounded-lg border-2 border-pink-200 dark:border-pink-800'>
+                <View className='items-center py-6 bg-pink-50 dark:bg-pink-950/30 rounded-lg border-2 border-pink-200 dark:border-pink-800'>
                   <Star className="w-12 h-12 text-pink-600 dark:text-pink-400 mb-2" />
                   <Text className='font-bold mb-1 text-pink-800 dark:text-pink-200'>Ready to Start Your First Streak? 🌈</Text>
                   <Text className='text-sm text-pink-600 dark:text-pink-400 text-center'>
@@ -683,10 +886,17 @@ export default function Screen() {
                 </View>
               )}
             </CardContent>
+            </LinearGradient>
           </Card>
 
                     {/* Quick Journal Entry */}
-          <Card className='w-full shadow-sm bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-2 border-emerald-200 dark:border-emerald-800'>
+          <Card className='w-full shadow-sm border-2 border-emerald-200 dark:border-emerald-800'>
+            <LinearGradient
+              colors={getCardGradient('journal', isDarkColorScheme)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className='rounded-lg'
+            >
             <CardContent className='pt-4'>
               <View className='flex-row items-center gap-2 mb-3'>
                 <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -702,7 +912,7 @@ export default function Screen() {
                 variant={todayJournal ? "secondary" : "default"}
                 className={`w-full h-12 ${todayJournal 
                   ? 'bg-emerald-100 dark:bg-emerald-900/50 border-2 border-emerald-300 dark:border-emerald-700' 
-                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 border-2 border-emerald-400'
+                  : 'bg-emerald-500 border-2 border-emerald-400'
                 }`}
                 onPress={() => router.push('/(tabs)/journal')}
               >
@@ -720,6 +930,7 @@ export default function Screen() {
                 </View>
               </Button>
             </CardContent>
+            </LinearGradient>
           </Card>
 
           {/* Crisis Support - Minimal */}
