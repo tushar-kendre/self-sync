@@ -1,0 +1,203 @@
+// SelfSync Database Schema in DBML
+// Generated from the SQLite database schema - Version 2.0
+
+Project SelfSync {
+  database_type: 'SQLite'
+  Note: 'Mental wellness and habit tracking application database - Restructured with dedicated log tables'
+}
+
+// Sleep tracking table
+Table sleep_logs {
+  id text [pk, note: 'Primary key']
+  date text [not null, note: 'ISO date string (YYYY-MM-DD)']
+  bed_time text [not null, note: 'Time went to bed (ISO time string)']
+  wake_time text [not null, note: 'Time woke up (ISO time string)']
+  sleep_duration_hours real [not null, note: 'Calculated sleep duration']
+  sleep_quality integer [default: 3, note: '1-5 rating of sleep quality']
+  sleep_interruptions integer [default: 0, note: 'Number of times woken up']
+  dream_recall boolean [default: false, note: 'Whether user remembers dreams']
+  environment text [default: 'bedroom', note: 'Where user slept (bedroom, hotel, couch, etc.)']
+  notes text [note: 'Optional sleep notes']
+  timestamp text [not null, note: 'When logged (ISO)']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    date [name: 'idx_sleep_logs_date']
+    timestamp [name: 'idx_sleep_logs_timestamp']
+  }
+}
+
+// Addiction/behavior tracking table
+Table addiction_logs {
+  id text [pk, note: 'Primary key']
+  date text [not null, note: 'ISO date string (YYYY-MM-DD)']
+  addiction_type text [not null, note: 'porn, social_media, alcohol, smoking, gambling, shopping, gaming, other']
+  event_type text [not null, note: 'urge, relapse, milestone - what happened']
+  was_resisted boolean [default: false, note: 'For urges - was it successfully resisted?']
+  urge_intensity integer [note: '1-10 scale (for urges)']
+  duration_minutes integer [note: 'Duration of relapse (if applicable)']
+  trigger text [note: 'What triggered the urge/relapse']
+  location text [note: 'Where it happened']
+  mood_before integer [default: 3, note: '1-5 mood before event']
+  mood_after integer [default: 3, note: '1-5 mood after event']
+  coping_strategy text [note: 'Strategy used to resist/cope']
+  notes text [note: 'Additional notes']
+  timestamp text [not null, note: 'Exact time of event (ISO)']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    date [name: 'idx_addiction_logs_date']
+    (addiction_type, date) [name: 'idx_addiction_logs_type_date']
+    timestamp [name: 'idx_addiction_logs_timestamp']
+  }
+}
+
+// Multiple mood entries per day for granular tracking
+Table mood_logs {
+  id text [pk, note: 'Primary key']
+  date text [not null, note: 'ISO date string (YYYY-MM-DD)']
+  mood integer [not null, note: '1-5 rating (1: Very Bad, 5: Very Good)']
+  energy integer [default: 3, note: '1-5 energy level']
+  stress integer [default: 3, note: '1-5 stress level']
+  context text [note: 'What was happening when mood was logged']
+  tags text [default: '[]', note: 'JSON array of mood tags']
+  notes text [note: 'Optional user notes']
+  timestamp text [not null, note: 'Exact time when logged (ISO)']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    date [name: 'idx_mood_logs_date']
+    timestamp [name: 'idx_mood_logs_timestamp']
+  }
+  
+  Note: 'Allows multiple mood check-ins throughout the day'
+}
+
+// Available healthy habits library
+Table healthy_habits {
+  id text [pk, note: 'Primary key']
+  name text [not null, note: 'Name of the habit']
+  description text [note: 'Description of the habit']
+  category text [default: 'physical', note: 'physical, mental, social, spiritual, productivity']
+  target_frequency text [default: 'daily', note: 'daily, weekly, monthly']
+  is_active boolean [default: true, note: 'Whether habit is currently active']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+}
+
+// Daily habit completion tracking
+Table habit_completions {
+  id text [pk, note: 'Primary key']
+  habit_id text [ref: > healthy_habits.id, not null, note: 'Reference to healthy habit']
+  date text [not null, note: 'ISO date string']
+  completed boolean [default: false, note: 'Whether habit was completed']
+  difficulty integer [default: 3, note: '1-5 scale of difficulty']
+  time_spent integer [note: 'Minutes spent on habit']
+  notes text [note: 'Optional notes about completion']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  
+  indexes {
+    (habit_id, date) [unique, name: 'idx_habit_completions_habit_date']
+  }
+}
+
+// Crisis support resources
+Table crisis_resources {
+  id text [pk, note: 'Primary key']
+  name text [not null, note: 'Name of the resource']
+  type text [not null, note: 'hotline, chat, emergency, therapist, friend, family']
+  contact text [not null, note: 'Phone number, email, or URL']
+  description text [note: 'Description of the resource']
+  is_active boolean [default: true, note: 'Whether resource is active']
+  priority integer [default: 1, note: 'Priority ordering for emergency situations']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    (priority, is_active) [name: 'idx_crisis_resources_priority']
+  }
+}
+
+// Application configuration settings
+Table app_settings {
+  id text [pk, note: 'Primary key']
+  key text [unique, not null, note: 'Setting key name']
+  value text [not null, note: 'Setting value as string']
+  type text [default: 'string', note: 'boolean, string, number, json']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  Note: 'Stores app configuration like theme, notifications, etc.'
+}
+
+// AI-generated insights and recommendations
+Table ai_insights {
+  id text [pk, note: 'Primary key']
+  type text [not null, note: 'weekly_summary, pattern_detection, mood_correlation, recommendation']
+  title text [not null, note: 'Insight title']
+  content text [not null, note: 'Insight content/description']
+  confidence real [default: 0.8, note: '0-1 scale of AI confidence']
+  metadata text [default: '{}', note: 'JSON object with additional data']
+  is_read boolean [default: false, note: 'Whether user has read the insight']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  expires_at text [note: 'When insight should expire (optional)']
+  
+  indexes {
+    (type, created_at) [name: 'idx_ai_insights_type_created']
+  }
+}
+
+// Streak tracking for different behaviors
+Table streaks {
+  id text [pk, note: 'Primary key']
+  behavior_type text [unique, not null, note: 'Matches behavior_logs.type']
+  current_streak integer [default: 0, note: 'Current streak count']
+  longest_streak integer [default: 0, note: 'Personal best streak']
+  last_reset_date text [note: 'When streak was last reset']
+  start_date text [not null, note: 'When tracking started']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    behavior_type [name: 'idx_streaks_behavior_type']
+  }
+}
+
+// Relationships
+Ref: habit_completions.habit_id > healthy_habits.id [delete: cascade]
+
+// Notes on the database design
+Note: '''
+# SelfSync Database Design
+
+This database supports a comprehensive mental wellness and habit tracking application.
+
+## Key Design Principles:
+- **Privacy First**: Sensitive data can be encrypted (is_encrypted flag)
+- **Granular Tracking**: Multiple mood entries per day, detailed behavior logs
+- **Flexibility**: JSON fields for arrays and metadata
+- **Performance**: Strategic indexes on frequently queried columns
+- **Streak Gamification**: Separate streak tracking for motivation
+- **Crisis Support**: Built-in crisis resources for emergency situations
+- **AI Insights**: Machine learning recommendations based on patterns
+
+## Data Flow:
+1. Sleep tracking in dedicated `sleep_logs` table
+2. Addiction/behavior events tracked in `addiction_logs`
+3. Multiple mood check-ins throughout the day in `mood_logs`
+4. Habit progress tracked in `habit_completions`
+5. AI analyzes patterns and stores insights in `ai_insights`
+6. Streak calculations updated in `streaks`
+
+## New Structure Benefits:
+- **Specialized Tables**: Each log type has its own optimized structure
+- **Granular Tracking**: Better data organization for specific behaviors
+- **Improved Queries**: More efficient data retrieval and analysis
+- **Scalability**: Easier to extend each log type independently
+
+## Privacy & Security:
+- Crisis resources available for emergency situations
+- Configurable privacy settings in `app_settings`
+- Specialized data handling for different log types
+'''
