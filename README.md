@@ -93,39 +93,47 @@ cd selfSync
 2. Install dependencies:
 
 ```bash
-npm install
+yarn install
 ```
 
 3. Start the development server:
 
 ```bash
-npm start
-```
-
-4. Run on your preferred platform:
-
-```bash
-# iOS
-npm run ios
-
-# Android
-npm run android
-
-# Web
-npm run web
+yarn dev
 ```
 
 ## 💾 Database Schema
 
-The app uses a local SQLite database with the following main tables:
+The app uses a local SQLite database with the following comprehensive schema:
 
-- `mood_logs` - Daily mood entries
-- `healthy_habits` - Habit definitions
-- `habit_completions` - Habit completion records
-- `addiction_logs` - Addiction-related events
-- `streaks` - Streak tracking for various behaviors
-- `journal_entries` - Personal journal entries
-- `app_settings` - User preferences and settings
+### Core Tracking Tables
+
+- `sleep_logs` - Sleep duration, quality, bedtime/wake time tracking
+- `mood_logs` - Daily mood entries with energy, stress levels, and context
+- `addiction_logs` - Urge tracking, resistance logging, and recovery events
+- `journal_entries` - Personal reflections with mood tags and privacy settings
+
+### Habit & Behavior Management
+
+- `healthy_habits` - Habit definitions with categories and target frequencies
+- `habit_completions` - Daily habit completion tracking with difficulty ratings
+- `streaks` - Streak counters for sleep, mood, addiction recovery, and habits
+
+### Support & Insights
+
+- `crisis_resources` - Emergency contacts and support resources
+- `ai_insights` - AI-generated wellness insights and recommendations
+- `resistance_metrics` - Detailed addiction resistance tracking and analytics
+
+### System Configuration
+
+- `app_settings` - User preferences, theme settings, and app configuration
+
+### Indexes & Performance
+
+- Optimized indexes on date, timestamp, and behavior type fields
+- Foreign key constraints for data integrity
+- Efficient querying for dashboard and analytics features
 
 ## 🎨 Design Philosophy
 

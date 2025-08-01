@@ -1,9 +1,9 @@
 // SelfSync Database Schema in DBML
-// Generated from the SQLite database schema - Version 2.0
+// Generated from the SQLite database schema - Version 3.0
 
 Project SelfSync {
   database_type: 'SQLite'
-  Note: 'Mental wellness and habit tracking application database - Restructured with dedicated log tables'
+  Note: 'Mental wellness and habit tracking application database - Complete schema with journal and resistance metrics'
 }
 
 // Sleep tracking table
@@ -152,7 +152,7 @@ Table ai_insights {
 // Streak tracking for different behaviors
 Table streaks {
   id text [pk, note: 'Primary key']
-  behavior_type text [unique, not null, note: 'Matches behavior_logs.type']
+  behavior_type text [unique, not null, note: 'sleep, mood, addiction_recovery, habits']
   current_streak integer [default: 0, note: 'Current streak count']
   longest_streak integer [default: 0, note: 'Personal best streak']
   last_reset_date text [note: 'When streak was last reset']
@@ -161,6 +161,47 @@ Table streaks {
   
   indexes {
     behavior_type [name: 'idx_streaks_behavior_type']
+  }
+}
+
+// Personal journaling table
+Table journal_entries {
+  id text [pk, note: 'Primary key']
+  date text [not null, note: 'ISO date string (YYYY-MM-DD)']
+  title text [note: 'Optional journal entry title']
+  content text [not null, note: 'Journal entry content']
+  mood integer [note: '1-5 mood rating (optional)']
+  tags text [note: 'JSON array of tags']
+  is_private boolean [default: true, note: 'Privacy setting for entry']
+  word_count integer [default: 0, note: 'Word count of content']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    date [name: 'idx_journal_entries_date']
+    created_at [name: 'idx_journal_entries_created_at']
+    mood [name: 'idx_journal_entries_mood']
+  }
+}
+
+// Resistance metrics for detailed addiction recovery tracking
+Table resistance_metrics {
+  id text [pk, note: 'Primary key']
+  date text [not null, note: 'ISO date string (YYYY-MM-DD)']
+  addiction_type text [not null, note: 'Type of addiction being tracked']
+  total_urges integer [default: 0, note: 'Total urges experienced']
+  resisted_urges integer [default: 0, note: 'Number of urges successfully resisted']
+  resistance_rate real [default: 0.0, note: 'Calculated resistance percentage (0-100)']
+  average_intensity real [default: 0.0, note: 'Average urge intensity (1-10 scale)']
+  common_triggers text [note: 'JSON array of most common triggers']
+  effective_strategies text [note: 'JSON array of effective coping strategies']
+  notes text [note: 'Additional insights or notes']
+  created_at text [not null, note: 'ISO timestamp of creation']
+  updated_at text [not null, note: 'ISO timestamp of last update']
+  
+  indexes {
+    date [name: 'idx_resistance_metrics_date']
+    (addiction_type, date) [name: 'idx_resistance_metrics_type_date']
   }
 }
 
@@ -174,9 +215,10 @@ Note: '''
 This database supports a comprehensive mental wellness and habit tracking application.
 
 ## Key Design Principles:
-- **Privacy First**: Sensitive data can be encrypted (is_encrypted flag)
+- **Privacy First**: All data stored locally with optional encryption
 - **Granular Tracking**: Multiple mood entries per day, detailed behavior logs
-- **Flexibility**: JSON fields for arrays and metadata
+- **Comprehensive Logging**: Sleep, mood, addiction, habits, and journal entries
+- **Resistance Analytics**: Detailed addiction recovery metrics and tracking
 - **Performance**: Strategic indexes on frequently queried columns
 - **Streak Gamification**: Separate streak tracking for motivation
 - **Crisis Support**: Built-in crisis resources for emergency situations
@@ -185,19 +227,32 @@ This database supports a comprehensive mental wellness and habit tracking applic
 ## Data Flow:
 1. Sleep tracking in dedicated `sleep_logs` table
 2. Addiction/behavior events tracked in `addiction_logs`
-3. Multiple mood check-ins throughout the day in `mood_logs`
-4. Habit progress tracked in `habit_completions`
-5. AI analyzes patterns and stores insights in `ai_insights`
-6. Streak calculations updated in `streaks`
+3. Resistance metrics calculated and stored in `resistance_metrics`
+4. Multiple mood check-ins throughout the day in `mood_logs`
+5. Personal reflections captured in `journal_entries`
+6. Habit progress tracked in `habit_completions`
+7. AI analyzes patterns and stores insights in `ai_insights`
+8. Streak calculations updated in `streaks`
 
-## New Structure Benefits:
-- **Specialized Tables**: Each log type has its own optimized structure
-- **Granular Tracking**: Better data organization for specific behaviors
-- **Improved Queries**: More efficient data retrieval and analysis
-- **Scalability**: Easier to extend each log type independently
+## Complete Feature Set:
+- **Sleep Analysis**: Duration, quality, environment tracking
+- **Mood Monitoring**: Energy, stress, context with multiple daily entries
+- **Addiction Recovery**: Urge tracking, resistance metrics, coping strategies
+- **Habit Building**: Completion tracking, difficulty assessment, time logging
+- **Personal Journaling**: Private entries with mood correlation and tagging
+- **Crisis Support**: Emergency resources and professional contacts
+- **Smart Insights**: AI-powered pattern recognition and recommendations
 
 ## Privacy & Security:
 - Crisis resources available for emergency situations
 - Configurable privacy settings in `app_settings`
+- Local-only data storage with no cloud sync required
 - Specialized data handling for different log types
+- Optional encryption for sensitive journal entries
+
+## Performance Optimizations:
+- Indexed date fields for efficient time-based queries
+- Composite indexes for multi-field searches
+- JSON fields for flexible metadata storage
+- Optimized for dashboard and analytics queries
 '''
