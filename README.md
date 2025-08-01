@@ -9,6 +9,7 @@ SelfSync is a personal wellness companion that empowers users to monitor their d
 ## ✨ Features
 
 ### Core Tracking
+
 - **Mood Tracking** - Log daily emotions with detailed context, tags, and notes
 - **Habit Monitoring** - Track healthy habits and build positive streaks
 - **Addiction Recovery** - Log urges, resistance wins, and maintain sobriety streaks
@@ -16,12 +17,14 @@ SelfSync is a personal wellness companion that empowers users to monitor their d
 - **Sleep Logging** - Monitor sleep patterns and quality
 
 ### Smart Analytics
+
 - **Wellness Score** - Dynamic scoring based on mood, sleep, and habit completion
 - **Streak Tracking** - Visual streak counters for different behaviors
 - **Trend Analysis** - Mood trends and progress insights
 - **Daily Dashboard** - Real-time overview of your wellness journey
 
 ### User Experience
+
 - **Dark & Light Mode** - Seamless theme switching with system preference support
 - **Personalized Interface** - Customized greetings and motivational messages
 - **Offline-First** - Local SQLite database for privacy and offline functionality
@@ -72,6 +75,7 @@ SelfSync is a personal wellness companion that empowers users to monitor their d
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or later)
 - npm or yarn
 - Expo CLI
@@ -80,22 +84,26 @@ SelfSync is a personal wellness companion that empowers users to monitor their d
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd selfSync
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm start
 ```
 
 4. Run on your preferred platform:
+
 ```bash
 # iOS
 npm run ios
@@ -110,6 +118,7 @@ npm run web
 ## 💾 Database Schema
 
 The app uses a local SQLite database with the following main tables:
+
 - `mood_logs` - Daily mood entries
 - `healthy_habits` - Habit definitions
 - `habit_completions` - Habit completion records

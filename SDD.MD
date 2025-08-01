@@ -19,11 +19,11 @@ SelfSync is designed as your **personal life tracker, reflection journal, and ha
 
 ## **2. Scope**
 
-* Track daily behaviors: sleep, screen time, urges, substance use, study, and custom habits.
-* Journal with mood tracking and AI-assisted reflection.
-* Visual dashboards to reveal progress trends.
-* Gamification via streaks, milestones, and positive nudges.
-* **AI insights** to analyze journals, detect hidden patterns, and suggest strategies.
+- Track daily behaviors: sleep, screen time, urges, substance use, study, and custom habits.
+- Journal with mood tracking and AI-assisted reflection.
+- Visual dashboards to reveal progress trends.
+- Gamification via streaks, milestones, and positive nudges.
+- **AI insights** to analyze journals, detect hidden patterns, and suggest strategies.
 
 ---
 
@@ -50,15 +50,15 @@ SelfSync is designed as your **personal life tracker, reflection journal, and ha
 
 ## **4. Positive Reinforcement & AI Feedback**
 
-| ID | Feature                  | Description                                                        |
-| -- | ------------------------ | ------------------------------------------------------------------ |
-| M1 | **Streak Counter**       | Tracks days free of harmful behaviors, shown prominently.          |
-| M2 | **“Win of the Day”**     | Highlights the strongest positive action each day.                 |
-| M3 | **AI Weekly Summary**    | “You studied 3 times this week and slept better after clean days.” |
-| M4 | **Behavior Correlation** | AI finds trends like “Low mood days often follow doomscrolling.”   |
-| M5 | **Journal Highlights**   | AI extracts key emotional themes from your writing.                |
-| M6 | **Daily Nudge Screen**   | Motivational AI quotes or personalized encouragement.              |
-| M7 | **Positive Habit Score** | Weekly score combining study, sleep, and exercise improvements.    |
+| ID  | Feature                  | Description                                                        |
+| --- | ------------------------ | ------------------------------------------------------------------ |
+| M1  | **Streak Counter**       | Tracks days free of harmful behaviors, shown prominently.          |
+| M2  | **“Win of the Day”**     | Highlights the strongest positive action each day.                 |
+| M3  | **AI Weekly Summary**    | “You studied 3 times this week and slept better after clean days.” |
+| M4  | **Behavior Correlation** | AI finds trends like “Low mood days often follow doomscrolling.”   |
+| M5  | **Journal Highlights**   | AI extracts key emotional themes from your writing.                |
+| M6  | **Daily Nudge Screen**   | Motivational AI quotes or personalized encouragement.              |
+| M7  | **Positive Habit Score** | Weekly score combining study, sleep, and exercise improvements.    |
 
 ---
 
@@ -68,15 +68,15 @@ SelfSync is designed as your **personal life tracker, reflection journal, and ha
 
 **Key AI Use Cases:**
 
-* Summarize weekly patterns: sleep, urges, mood, and study correlations.
-* Analyze journal entries to detect stressors and improvements.
-* Provide *conversational feedback* like:
-  *“This week, your productivity was highest on days you woke before 8 AM and avoided reels.”*
+- Summarize weekly patterns: sleep, urges, mood, and study correlations.
+- Analyze journal entries to detect stressors and improvements.
+- Provide _conversational feedback_ like:
+  _“This week, your productivity was highest on days you woke before 8 AM and avoided reels.”_
 
 **Tech Options:**
 
-* **Local AI:** Lightweight model (e.g., DistilBERT or TinyLLaMA via `transformers.js`) for offline sentiment & topic analysis.
-* **Cloud AI:** GPT-4o or Claude for deep weekly insights (with user approval).
+- **Local AI:** Lightweight model (e.g., DistilBERT or TinyLLaMA via `transformers.js`) for offline sentiment & topic analysis.
+- **Cloud AI:** GPT-4o or Claude for deep weekly insights (with user approval).
 
 ---
 
@@ -157,52 +157,45 @@ SelfSync is designed as your **personal life tracker, reflection journal, and ha
 ## **7. Screens Overview**
 
 1. **Home Screen**
-
-   * Today’s streaks, win of the day, quick log buttons (e.g., “Log Urge”).
-   * Morning motivational quote (AI-powered).
+   - Today’s streaks, win of the day, quick log buttons (e.g., “Log Urge”).
+   - Morning motivational quote (AI-powered).
 
 2. **Log Day**
-
-   * Wake/sleep times, study, urges, positive habits.
+   - Wake/sleep times, study, urges, positive habits.
 
 3. **Addiction Tracker**
-
-   * View logs for porn, reels, bingeing, nicotine/weed.
+   - View logs for porn, reels, bingeing, nicotine/weed.
 
 4. **Journal**
-
-   * Mood picker (1–5), journal text box, optional AI writing prompt.
+   - Mood picker (1–5), journal text box, optional AI writing prompt.
 
 5. **Dashboard & Insights**
-
-   * AI-generated weekly summary, charts for mood, urges, study, habits.
+   - AI-generated weekly summary, charts for mood, urges, study, habits.
 
 6. **Healthy Habits Screen**
-
-   * Track & manage custom habits like exercise, reading.
+   - Track & manage custom habits like exercise, reading.
 
 7. **Settings**
-
-   * Reminders, AI toggle, data export, PIN lock.
+   - Reminders, AI toggle, data export, PIN lock.
 
 ---
 
 ## **8. Visual Feedback**
 
-* **Mood & Urge Trends:** Line graphs over 7/30 days.
-* **Clean Streaks:** Timeline + current streak highlight.
-* **Study Time Chart:** Weekly bar chart.
-* **Habit Heatmap:** Calendar view of habit completions.
-* **AI Insights Card:** “Your longest clean streak was 7 days — can you beat that?”
+- **Mood & Urge Trends:** Line graphs over 7/30 days.
+- **Clean Streaks:** Timeline + current streak highlight.
+- **Study Time Chart:** Weekly bar chart.
+- **Habit Heatmap:** Calendar view of habit completions.
+- **AI Insights Card:** “Your longest clean streak was 7 days — can you beat that?”
 
 ---
 
 ## **9. Notifications**
 
-* **Morning:** “Set your intention for the day.”
-* **Night:** “Reflect on today: mood & urges?”
-* **Smart AI Reminder:** “You’ve been on reels for 30 min — is it intentional?”
-* **Milestone Alerts:** “3 days clean from binge-watching — huge progress!”
+- **Morning:** “Set your intention for the day.”
+- **Night:** “Reflect on today: mood & urges?”
+- **Smart AI Reminder:** “You’ve been on reels for 30 min — is it intentional?”
+- **Milestone Alerts:** “3 days clean from binge-watching — huge progress!”
 
 ---
 
@@ -256,23 +249,23 @@ React Native App
 
 ## **12. Privacy & Security**
 
-* All data local by default.
-* **End-to-end encryption** for journal entries and sensitive data.
-* AI analysis is **offline unless you explicitly allow cloud calls**.
-* **Local data anonymization** before any AI processing.
-* Optional PIN/biometric lock with **panic button** for quick hide/lock.
-* **Data retention policies** (auto-delete old entries after configurable period).
-* Optional encrypted export for backup.
-* **Crisis detection** keywords with immediate resource suggestions.
+- All data local by default.
+- **End-to-end encryption** for journal entries and sensitive data.
+- AI analysis is **offline unless you explicitly allow cloud calls**.
+- **Local data anonymization** before any AI processing.
+- Optional PIN/biometric lock with **panic button** for quick hide/lock.
+- **Data retention policies** (auto-delete old entries after configurable period).
+- Optional encrypted export for backup.
+- **Crisis detection** keywords with immediate resource suggestions.
 
 ---
 
 ## **13. Future Enhancements**
 
-* AI “conversational coach” mode (chat with your patterns).
-* Voice journaling with sentiment analysis.
-* Dopamine detox timer (track screen-free blocks).
-* Lightweight habit challenges (e.g., “3-day clean challenge”).
+- AI “conversational coach” mode (chat with your patterns).
+- Voice journaling with sentiment analysis.
+- Dopamine detox timer (track screen-free blocks).
+- Lightweight habit challenges (e.g., “3-day clean challenge”).
 
 ---
 

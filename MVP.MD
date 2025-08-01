@@ -12,35 +12,35 @@ Here’s a focused **MVP (Minimum Viable Product) Development Plan** for your **
 
 ### 🔨 Features to Build:
 
-* [ ] Local database (SQLite) setup with data encryption
-* [ ] Home screen: daily check-in + streak display
-* [ ] Log screen with:
+- [ ] Local database (SQLite) setup with data encryption
+- [ ] Home screen: daily check-in + streak display
+- [ ] Log screen with:
+  - Wake/Sleep time + sleep quality rating
+  - Mood picker (1–5) + energy level
+  - Quick journal entry with encryption
+  - Addiction logs (porn, reels, binge, weed, nicotine)
+  - Urge logging (resisted/given) with intensity scale (1-10)
+  - Study duration entry + focus rating
+  - Healthy habit checkbox list (e.g., read, meditate)
+  - Trigger identification + coping strategy logging
 
-  * Wake/Sleep time + sleep quality rating
-  * Mood picker (1–5) + energy level
-  * Quick journal entry with encryption
-  * Addiction logs (porn, reels, binge, weed, nicotine)
-  * Urge logging (resisted/given) with intensity scale (1-10)
-  * Study duration entry + focus rating
-  * Healthy habit checkbox list (e.g., read, meditate)
-  * Trigger identification + coping strategy logging
-* [ ] Streak tracker (for each harmful behavior)
-* [ ] Weekly dashboard with:
+- [ ] Streak tracker (for each harmful behavior)
+- [ ] Weekly dashboard with:
+  - Mood trend line
+  - Clean streak bar
+  - Study minutes bar
+  - Habit heatmap
 
-  * Mood trend line
-  * Clean streak bar
-  * Study minutes bar
-  * Habit heatmap
-* [ ] Local-only storage (SQLite) with automatic backups
-* [ ] Settings page: PIN lock, data export, crisis resources
-* [ ] Crisis support features: emergency contacts, panic button
-* [ ] Real-time coping strategies when logging urges
+- [ ] Local-only storage (SQLite) with automatic backups
+- [ ] Settings page: PIN lock, data export, crisis resources
+- [ ] Crisis support features: emergency contacts, panic button
+- [ ] Real-time coping strategies when logging urges
 
 ### 🧠 Value:
 
-* Gives you full visibility and ownership of your days
-* Forms the foundation of your habit-breaking and reflection cycle
-* Launches the app quickly and privately
+- Gives you full visibility and ownership of your days
+- Forms the foundation of your habit-breaking and reflection cycle
+- Launches the app quickly and privately
 
 ---
 
@@ -50,23 +50,23 @@ Here’s a focused **MVP (Minimum Viable Product) Development Plan** for your **
 
 ### 🔨 Features to Build:
 
-* [ ] AI engine abstraction layer (start with GPT-3.5/GPT-4 via OpenAI)
-* [ ] Local sentiment analysis using lightweight models (privacy-first)
-* [ ] Weekly summary generator:
+- [ ] AI engine abstraction layer (start with GPT-3.5/GPT-4 via OpenAI)
+- [ ] Local sentiment analysis using lightweight models (privacy-first)
+- [ ] Weekly summary generator:
+  - Behavior correlation: "Mood drops after binge nights"
+  - Pattern extraction: "Study is more frequent after early wake-up"
+  - Trigger pattern recognition (time, location, emotional state)
 
-  * Behavior correlation: "Mood drops after binge nights"
-  * Pattern extraction: "Study is more frequent after early wake-up"
-  * Trigger pattern recognition (time, location, emotional state)
-* [ ] Journal tone analysis (sentiment + key topics)
-* [ ] Motivational nudge generator
-* [ ] Personalized intervention suggestions based on successful past strategies
-* [ ] Toggle in settings: **Enable AI insights (cloud-based)**
+- [ ] Journal tone analysis (sentiment + key topics)
+- [ ] Motivational nudge generator
+- [ ] Personalized intervention suggestions based on successful past strategies
+- [ ] Toggle in settings: **Enable AI insights (cloud-based)**
 
 ### 🧠 Value:
 
-* Gives you **non-obvious insights** into emotional triggers and positive habits
-* Adds **depth and meaning** to your data
-* Makes weekly review feel like personalized coaching
+- Gives you **non-obvious insights** into emotional triggers and positive habits
+- Adds **depth and meaning** to your data
+- Makes weekly review feel like personalized coaching
 
 ---
 
@@ -76,20 +76,20 @@ Here’s a focused **MVP (Minimum Viable Product) Development Plan** for your **
 
 ### 🔨 Features to Build:
 
-* [ ] “Win of the Day” visual card (e.g., “You resisted an urge + studied!”)
-* [ ] Streak celebration animations (3, 7, 14, 30 days)
-* [ ] Smart reminders:
+- [ ] “Win of the Day” visual card (e.g., “You resisted an urge + studied!”)
+- [ ] Streak celebration animations (3, 7, 14, 30 days)
+- [ ] Smart reminders:
+  - Based on usage pattern ("No log today — how are you feeling?")
+  - Screen-time detection (“Over 30 min on reels today — check-in?”)
 
-  * Based on usage pattern ("No log today — how are you feeling?")
-  * Screen-time detection (“Over 30 min on reels today — check-in?”)
-* [ ] Customizable habit list + streaks for positive habits
-* [ ] "Best Day of the Week" AI card
+- [ ] Customizable habit list + streaks for positive habits
+- [ ] "Best Day of the Week" AI card
 
 ### 🧠 Value:
 
-* Makes progress feel **visible, motivating, and rewarding**
-* Provides timely nudges to **interrupt harmful behavior**
-* Encourages long-term habit change without guilt
+- Makes progress feel **visible, motivating, and rewarding**
+- Provides timely nudges to **interrupt harmful behavior**
+- Encourages long-term habit change without guilt
 
 ---
 
@@ -107,12 +107,12 @@ Here’s a focused **MVP (Minimum Viable Product) Development Plan** for your **
 
 Before Phase 1, consider these critical foundations:
 
-* [ ] **User research** with target audience (mental health users)
-* [ ] **Mental health professional consultation** for feature validation
-* [ ] **Accessibility audit** of UI designs (screen readers, color contrast)
-* [ ] **Security architecture review** for data protection
-* [ ] **Crisis intervention protocol** design
-* [ ] **Legal compliance review** (privacy laws, mental health regulations)
+- [ ] **User research** with target audience (mental health users)
+- [ ] **Mental health professional consultation** for feature validation
+- [ ] **Accessibility audit** of UI designs (screen readers, color contrast)
+- [ ] **Security architecture review** for data protection
+- [ ] **Crisis intervention protocol** design
+- [ ] **Legal compliance review** (privacy laws, mental health regulations)
 
 ---
 
@@ -120,9 +120,9 @@ Before Phase 1, consider these critical foundations:
 
 If you're starting from scratch:
 
-* Build screens in React Native without backend
-* Use in-memory mock data for form flow + layout polish
-* Gather initial feedback from yourself to iterate quickly
+- Build screens in React Native without backend
+- Use in-memory mock data for form flow + layout polish
+- Gather initial feedback from yourself to iterate quickly
 
 ---
 
@@ -145,6 +145,7 @@ If you're starting from scratch:
 ## 🏗️ Enhanced Architecture Considerations
 
 ### **State Management Structure:**
+
 ```typescript
 // Zustand store example
 interface AppStore {
@@ -153,7 +154,7 @@ interface AppStore {
   currentStreaks: Record<string, number>;
   aiInsights: Insight[];
   settings: UserSettings;
-  
+
   // Actions
   addDailyLog: (log: DailyLog) => void;
   addBehaviorLog: (log: BehaviorLog) => void;
@@ -163,6 +164,7 @@ interface AppStore {
 ```
 
 ### **Database Schema with Indexes:**
+
 ```sql
 -- Performance optimizations
 CREATE INDEX idx_daily_logs_date ON daily_logs(date);
@@ -171,33 +173,36 @@ CREATE INDEX idx_urge_intensity ON behavior_logs(urge_intensity, was_resisted);
 ```
 
 ### **Accessibility Features:**
-* Voice input for journaling during difficult moments
-* Screen reader compatibility
-* High contrast mode support
-* One-handed operation design
-* Large text support
+
+- Voice input for journaling during difficult moments
+- Screen reader compatibility
+- High contrast mode support
+- One-handed operation design
+- Large text support
 
 ---
 
 ## 🧪 Testing & Validation Strategy
 
 ### **Phase 1 Testing:**
-* [ ] **Unit tests** for core data functions
-* [ ] **Integration tests** for database operations
-* [ ] **Accessibility testing** with screen readers
-* [ ] **Performance testing** with large datasets
-* [ ] **Security testing** for encryption features
+
+- [ ] **Unit tests** for core data functions
+- [ ] **Integration tests** for database operations
+- [ ] **Accessibility testing** with screen readers
+- [ ] **Performance testing** with large datasets
+- [ ] **Security testing** for encryption features
 
 ### **User Validation:**
-* [ ] **Self-testing** for 2 weeks before expanding
-* [ ] **Mental health professional review** of crisis features
-* [ ] **Accessibility audit** with users who have disabilities
+
+- [ ] **Self-testing** for 2 weeks before expanding
+- [ ] **Mental health professional review** of crisis features
+- [ ] **Accessibility audit** with users who have disabilities
 
 ---
 
 Would you like me to now:
 
-* Create a GitHub README + folder skeleton for Phase 1?
-* Provide example schema code + seed database setup?
+- Create a GitHub README + folder skeleton for Phase 1?
+- Provide example schema code + seed database setup?
 
 Let me know how hands-on you want to go from here.

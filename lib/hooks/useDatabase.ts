@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { 
-  initializeDatabase, 
-  SleepLogService, 
-  MoodLogService, 
+import { useState, useEffect } from "react";
+import {
+  initializeDatabase,
+  SleepLogService,
+  MoodLogService,
   AddictionLogService,
   HabitService,
   StreakService,
@@ -10,19 +10,19 @@ import {
   AppSettingsService,
   AIInsightService,
   JournalService,
-  DatabaseManager
-} from '../database';
-import type { 
-  SleepLog, 
-  MoodLog, 
-  AddictionLog, 
-  HealthyHabit, 
+  DatabaseManager,
+} from "../database";
+import type {
+  SleepLog,
+  MoodLog,
+  AddictionLog,
+  HealthyHabit,
   HabitCompletion,
   Streak,
   CrisisResource,
   AIInsight,
-  JournalEntry
-} from '../database/types';
+  JournalEntry,
+} from "../database/types";
 
 /**
  * Hook for managing database initialization
@@ -35,17 +35,35 @@ export function useDatabase() {
   const retry = async () => {
     setError(null);
     setIsInitialized(false);
-    
+
     try {
-      console.log('🔄 Retrying database initialization...');
+      console.log("🔄 Retrying database initialization...");
       const manager = DatabaseManager.getInstance();
       await manager.initialize();
       setIsInitialized(true);
-      console.log('✅ Database retry successful');
+      console.log("✅ Database retry successful");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Database retry failed';
+      const errorMessage =
+        err instanceof Error ? err.message : "Database retry failed";
       setError(errorMessage);
-      console.error('❌ Database retry failed:', err);
+      console.error("❌ Database retry failed:", err);
+    }
+  };
+
+  const clearAllData = async () => {
+    try {
+      console.log("🗑️ Clearing all database data...");
+      const manager = DatabaseManager.getInstance();
+      await manager.clearAllData();
+      setIsInitialized(false);
+      setError(null);
+      console.log("✅ Database cleared successfully");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to clear database";
+      setError(errorMessage);
+      console.error("❌ Failed to clear database:", err);
+      throw err;
     }
   };
 
@@ -54,7 +72,7 @@ export function useDatabase() {
 
     const initialize = async () => {
       if (isInitialized || isInitializing) return;
-      
+
       setIsInitializing(true);
       setError(null);
 
@@ -62,13 +80,16 @@ export function useDatabase() {
         await initializeDatabase();
         if (isMounted) {
           setIsInitialized(true);
-          console.log('✅ Database hook: Database initialized successfully');
+          console.log("✅ Database hook: Database initialized successfully");
         }
       } catch (err) {
         if (isMounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Database initialization failed';
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Database initialization failed";
           setError(errorMessage);
-          console.error('❌ Database hook: Initialization failed:', err);
+          console.error("❌ Database hook: Initialization failed:", err);
         }
       } finally {
         if (isMounted) {
@@ -88,7 +109,8 @@ export function useDatabase() {
     isInitialized,
     isInitializing,
     error,
-    retry
+    retry,
+    clearAllData,
   };
 }
 
@@ -113,31 +135,39 @@ export function useSleepLogs() {
       const logs = await service.getRecentSleepLogs(limit);
       setSleepLogs(logs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load sleep logs');
+      setError(
+        err instanceof Error ? err.message : "Failed to load sleep logs",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const createSleepLog = async (data: Omit<SleepLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<SleepLog | null> => {
+  const createSleepLog = async (
+    data: Omit<SleepLog, "id" | "createdAt" | "updatedAt">,
+  ): Promise<SleepLog | null> => {
     try {
       const service = getService();
       const result = await service.createSleepLog(data);
       await loadRecentLogs();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create sleep log');
+      setError(
+        err instanceof Error ? err.message : "Failed to create sleep log",
+      );
       return null;
     }
   };
 
   const getTodaySleepLog = async (): Promise<SleepLog | null> => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     try {
       const service = getService();
       return await service.getSleepLogByDate(today);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get today\'s sleep log');
+      setError(
+        err instanceof Error ? err.message : "Failed to get today's sleep log",
+      );
       return null;
     }
   };
@@ -147,12 +177,14 @@ export function useSleepLogs() {
       const service = getService();
       return await service.getSleepStats(days);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get sleep stats');
+      setError(
+        err instanceof Error ? err.message : "Failed to get sleep stats",
+      );
       return {
         averageHours: 0,
         averageQuality: 0,
         averageEfficiency: 0,
-        totalLogs: 0
+        totalLogs: 0,
       };
     }
   };
@@ -161,10 +193,12 @@ export function useSleepLogs() {
     try {
       const manager = DatabaseManager.getInstance();
       const streakService = new StreakService(manager.getDatabase());
-      const streak = await streakService.getStreakByType('sleep');
+      const streak = await streakService.getStreakByType("sleep");
       return streak?.currentStreak || 0;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get sleep streak');
+      setError(
+        err instanceof Error ? err.message : "Failed to get sleep streak",
+      );
       return 0;
     }
   };
@@ -177,7 +211,7 @@ export function useSleepLogs() {
     createSleepLog,
     getTodaySleepLog,
     getSleepStats,
-    getSleepStreak
+    getSleepStreak,
   };
 }
 
@@ -202,31 +236,37 @@ export function useMoodLogs() {
       const logs = await service.getRecentMoodLogs(limit);
       setMoodLogs(logs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load mood logs');
+      setError(err instanceof Error ? err.message : "Failed to load mood logs");
     } finally {
       setLoading(false);
     }
   };
 
-  const createMoodLog = async (data: Omit<MoodLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<MoodLog | null> => {
+  const createMoodLog = async (
+    data: Omit<MoodLog, "id" | "createdAt" | "updatedAt">,
+  ): Promise<MoodLog | null> => {
     try {
       const service = getService();
       const result = await service.createMoodLog(data);
       await loadRecentLogs();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create mood log');
+      setError(
+        err instanceof Error ? err.message : "Failed to create mood log",
+      );
       return null;
     }
   };
 
   const getTodayMoodLogs = async (): Promise<MoodLog[]> => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     try {
       const service = getService();
       return await service.getMoodLogsByDate(today);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get today\'s mood logs');
+      setError(
+        err instanceof Error ? err.message : "Failed to get today's mood logs",
+      );
       return [];
     }
   };
@@ -236,7 +276,7 @@ export function useMoodLogs() {
       const service = getService();
       return await service.getMoodTrend(days);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get mood trend');
+      setError(err instanceof Error ? err.message : "Failed to get mood trend");
       return [];
     }
   };
@@ -245,10 +285,12 @@ export function useMoodLogs() {
     try {
       const manager = DatabaseManager.getInstance();
       const streakService = new StreakService(manager.getDatabase());
-      const streak = await streakService.getStreakByType('mood_logging');
+      const streak = await streakService.getStreakByType("mood_logging");
       return streak?.currentStreak || 0;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get mood streak');
+      setError(
+        err instanceof Error ? err.message : "Failed to get mood streak",
+      );
       return 0;
     }
   };
@@ -261,7 +303,7 @@ export function useMoodLogs() {
     createMoodLog,
     getTodayMoodLogs,
     getMoodTrend,
-    getMoodStreak
+    getMoodStreak,
   };
 }
 
@@ -286,32 +328,109 @@ export function useAddictionLogs() {
       const logs = await service.getRecentAddictionLogs(limit);
       setAddictionLogs(logs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load addiction logs');
+      setError(
+        err instanceof Error ? err.message : "Failed to load addiction logs",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const createAddictionLog = async (data: Omit<AddictionLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<AddictionLog | null> => {
+  const createAddictionLog = async (
+    data: Omit<AddictionLog, "id" | "createdAt" | "updatedAt">,
+  ): Promise<AddictionLog | null> => {
     try {
       const service = getService();
       const result = await service.createAddictionLog(data);
       await loadRecentLogs();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create addiction log');
+      setError(
+        err instanceof Error ? err.message : "Failed to create addiction log",
+      );
       return null;
     }
   };
 
   const getTodayAddictionLogs = async (): Promise<AddictionLog[]> => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     try {
       const service = getService();
       return await service.getAddictionLogsByDate(today);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get today\'s addiction logs');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to get today's addiction logs",
+      );
       return [];
+    }
+  };
+
+  const getAddictionStreak = async (): Promise<number> => {
+    try {
+      const manager = DatabaseManager.getInstance();
+      const streakService = new StreakService(manager.getDatabase());
+      const streak = await streakService.getStreakByType("addiction_recovery");
+      return streak?.currentStreak || 0;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to get addiction streak",
+      );
+      return 0;
+    }
+  };
+
+  const getResistanceMetrics = async (addictionType: string) => {
+    try {
+      const manager = DatabaseManager.getInstance();
+      return await manager.resistanceMetrics.getResistanceMetrics(
+        addictionType,
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to get resistance metrics",
+      );
+      return null;
+    }
+  };
+
+  const generateResistanceMessage = async (
+    addictionType: string,
+    wasResisted: boolean,
+    urgeIntensity: number,
+  ) => {
+    try {
+      const manager = DatabaseManager.getInstance();
+      const metrics =
+        await manager.resistanceMetrics.getResistanceMetrics(addictionType);
+      if (metrics) {
+        return manager.resistanceMetrics.generateResistanceMessage(
+          metrics,
+          wasResisted,
+          urgeIntensity,
+        );
+      }
+      return {
+        title: wasResisted ? "🎯 Great Job!" : "🤗 Tomorrow is a New Day",
+        message: wasResisted
+          ? "Urge resisted successfully!"
+          : "Recovery isn't about perfection, it's about progress.",
+        encouragement: wasResisted
+          ? "Every resistance builds strength!"
+          : "You can try again tomorrow.",
+      };
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to generate resistance message",
+      );
+      return {
+        title: "Keep Going",
+        message: "Every step counts in your recovery journey.",
+        encouragement: "You're stronger than you know.",
+      };
     }
   };
 
@@ -321,7 +440,10 @@ export function useAddictionLogs() {
     error,
     loadRecentLogs,
     createAddictionLog,
-    getTodayAddictionLogs
+    getTodayAddictionLogs,
+    getAddictionStreak,
+    getResistanceMetrics,
+    generateResistanceMessage,
   };
 }
 
@@ -346,30 +468,34 @@ export function useHabits() {
       const allHabits = await service.getAllHabits();
       setHabits(allHabits);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load habits');
+      setError(err instanceof Error ? err.message : "Failed to load habits");
     } finally {
       setLoading(false);
     }
   };
 
-  const createHabit = async (data: Omit<HealthyHabit, 'id' | 'createdAt' | 'updatedAt'>): Promise<HealthyHabit | null> => {
+  const createHabit = async (
+    data: Omit<HealthyHabit, "id" | "createdAt" | "updatedAt">,
+  ): Promise<HealthyHabit | null> => {
     try {
       const service = getService();
       const result = await service.createHabit(data);
       await loadAllHabits();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create habit');
+      setError(err instanceof Error ? err.message : "Failed to create habit");
       return null;
     }
   };
 
-  const completeHabit = async (data: Omit<HabitCompletion, 'id' | 'createdAt'>): Promise<HabitCompletion | null> => {
+  const completeHabit = async (
+    data: Omit<HabitCompletion, "id" | "createdAt">,
+  ): Promise<HabitCompletion | null> => {
     try {
       const service = getService();
       return await service.completeHabit(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete habit');
+      setError(err instanceof Error ? err.message : "Failed to complete habit");
       return null;
     }
   };
@@ -380,7 +506,7 @@ export function useHabits() {
     error,
     loadAllHabits,
     createHabit,
-    completeHabit
+    completeHabit,
   };
 }
 
@@ -405,30 +531,35 @@ export function useStreaks() {
       const allStreaks = await service.getAllStreaks();
       setStreaks(allStreaks);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load streaks');
+      setError(err instanceof Error ? err.message : "Failed to load streaks");
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStreak = async (behaviorType: string, wasResisted: boolean): Promise<Streak | null> => {
+  const updateStreak = async (
+    behaviorType: string,
+    wasResisted: boolean,
+  ): Promise<Streak | null> => {
     try {
       const service = getService();
       const result = await service.updateStreak(behaviorType, wasResisted);
       await loadAllStreaks();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update streak');
+      setError(err instanceof Error ? err.message : "Failed to update streak");
       return null;
     }
   };
 
-  const getStreakByType = async (behaviorType: string): Promise<Streak | null> => {
+  const getStreakByType = async (
+    behaviorType: string,
+  ): Promise<Streak | null> => {
     try {
       const service = getService();
       return await service.getStreakByType(behaviorType);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get streak');
+      setError(err instanceof Error ? err.message : "Failed to get streak");
       return null;
     }
   };
@@ -439,7 +570,7 @@ export function useStreaks() {
     error,
     loadAllStreaks,
     updateStreak,
-    getStreakByType
+    getStreakByType,
   };
 }
 
@@ -460,25 +591,32 @@ export function useUserSettings() {
 
   useEffect(() => {
     if (isInitialized) {
-      loadUserSettings();
+      // Add a small delay to ensure database is fully ready
+      const timeoutId = setTimeout(() => {
+        loadUserSettings();
+      }, 200); // 200ms delay to ensure stable database state
+
+      return () => clearTimeout(timeoutId);
     }
   }, [isInitialized]);
 
   const loadUserSettings = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const service = getService();
       const [name, firstTime] = await Promise.all([
         service.getUserName(),
-        service.isFirstTime()
+        service.isFirstTime(),
       ]);
-      
+
       setUserName(name);
       setIsFirstTime(firstTime);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load user settings');
+      setError(
+        err instanceof Error ? err.message : "Failed to load user settings",
+      );
     } finally {
       setLoading(false);
     }
@@ -493,7 +631,7 @@ export function useUserSettings() {
       setIsFirstTime(false);
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save user name');
+      setError(err instanceof Error ? err.message : "Failed to save user name");
       return false;
     }
   };
@@ -503,18 +641,49 @@ export function useUserSettings() {
       const service = getService();
       return await service.getSetting(key);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get setting');
+      setError(err instanceof Error ? err.message : "Failed to get setting");
       return null;
     }
   };
 
-  const setSetting = async (key: string, value: string, type: string = 'string'): Promise<boolean> => {
+  const setSetting = async (
+    key: string,
+    value: string,
+    type: string = "string",
+  ): Promise<boolean> => {
     try {
       const service = getService();
       await service.setSetting(key, value, type);
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set setting');
+      setError(err instanceof Error ? err.message : "Failed to set setting");
+      return false;
+    }
+  };
+
+  const getThemePreference = async (): Promise<"light" | "dark" | null> => {
+    try {
+      const service = getService();
+      return await service.getThemePreference();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to get theme preference",
+      );
+      return null;
+    }
+  };
+
+  const setThemePreference = async (
+    theme: "light" | "dark",
+  ): Promise<boolean> => {
+    try {
+      const service = getService();
+      await service.setThemePreference(theme);
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to set theme preference",
+      );
       return false;
     }
   };
@@ -527,7 +696,9 @@ export function useUserSettings() {
     saveUserName,
     getSetting,
     setSetting,
-    refresh: loadUserSettings
+    getThemePreference,
+    setThemePreference,
+    refresh: loadUserSettings,
   };
 }
 
@@ -552,7 +723,9 @@ export function useCrisisResources() {
       const allResources = await service.getAllCrisisResources();
       setResources(allResources);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load crisis resources');
+      setError(
+        err instanceof Error ? err.message : "Failed to load crisis resources",
+      );
     } finally {
       setLoading(false);
     }
@@ -563,7 +736,11 @@ export function useCrisisResources() {
       const service = getService();
       return await service.getEmergencyResources();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get emergency resources');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to get emergency resources",
+      );
       return [];
     }
   };
@@ -573,7 +750,7 @@ export function useCrisisResources() {
     loading,
     error,
     loadAllResources,
-    getEmergencyResources
+    getEmergencyResources,
   };
 }
 
@@ -598,20 +775,22 @@ export function useAIInsights() {
       const unreadInsights = await service.getUnreadInsights();
       setInsights(unreadInsights);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load insights');
+      setError(err instanceof Error ? err.message : "Failed to load insights");
     } finally {
       setLoading(false);
     }
   };
 
-  const createInsight = async (data: Omit<AIInsight, 'id' | 'createdAt'>): Promise<AIInsight | null> => {
+  const createInsight = async (
+    data: Omit<AIInsight, "id" | "createdAt">,
+  ): Promise<AIInsight | null> => {
     try {
       const service = getService();
       const result = await service.createInsight(data);
       await loadUnreadInsights();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create insight');
+      setError(err instanceof Error ? err.message : "Failed to create insight");
       return null;
     }
   };
@@ -622,7 +801,9 @@ export function useAIInsights() {
       await service.markAsRead(id);
       await loadUnreadInsights();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to mark insight as read');
+      setError(
+        err instanceof Error ? err.message : "Failed to mark insight as read",
+      );
     }
   };
 
@@ -632,7 +813,7 @@ export function useAIInsights() {
     error,
     loadUnreadInsights,
     createInsight,
-    markAsRead
+    markAsRead,
   };
 }
 
@@ -657,32 +838,43 @@ export function useJournal() {
       const recentEntries = await service.getRecentEntries(limit);
       setEntries(recentEntries);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load journal entries');
+      setError(
+        err instanceof Error ? err.message : "Failed to load journal entries",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const createEntry = async (data: Omit<JournalEntry, 'id' | 'wordCount' | 'createdAt' | 'updatedAt'>): Promise<JournalEntry | null> => {
+  const createEntry = async (
+    data: Omit<JournalEntry, "id" | "wordCount" | "createdAt" | "updatedAt">,
+  ): Promise<JournalEntry | null> => {
     try {
       const service = getService();
       const result = await service.createEntry(data);
       await loadRecentEntries();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create journal entry');
+      setError(
+        err instanceof Error ? err.message : "Failed to create journal entry",
+      );
       return null;
     }
   };
 
-  const updateEntry = async (id: string, data: Partial<Omit<JournalEntry, 'id' | 'createdAt'>>): Promise<JournalEntry | null> => {
+  const updateEntry = async (
+    id: string,
+    data: Partial<Omit<JournalEntry, "id" | "createdAt">>,
+  ): Promise<JournalEntry | null> => {
     try {
       const service = getService();
       const result = await service.updateEntry(id, data);
       await loadRecentEntries();
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update journal entry');
+      setError(
+        err instanceof Error ? err.message : "Failed to update journal entry",
+      );
       return null;
     }
   };
@@ -696,7 +888,9 @@ export function useJournal() {
       }
       return success;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete journal entry');
+      setError(
+        err instanceof Error ? err.message : "Failed to delete journal entry",
+      );
       return false;
     }
   };
@@ -706,7 +900,9 @@ export function useJournal() {
       const service = getService();
       return await service.getEntryByDate(date);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get journal entry');
+      setError(
+        err instanceof Error ? err.message : "Failed to get journal entry",
+      );
       return null;
     }
   };
@@ -716,7 +912,9 @@ export function useJournal() {
       const service = getService();
       return await service.searchEntries(query);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to search journal entries');
+      setError(
+        err instanceof Error ? err.message : "Failed to search journal entries",
+      );
       return [];
     }
   };
@@ -726,13 +924,15 @@ export function useJournal() {
       const service = getService();
       return await service.getJournalStats(days);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get journal stats');
+      setError(
+        err instanceof Error ? err.message : "Failed to get journal stats",
+      );
       return {
         totalEntries: 0,
         totalWords: 0,
         averageWordsPerEntry: 0,
         averageMood: 0,
-        streakDays: 0
+        streakDays: 0,
       };
     }
   };
@@ -742,7 +942,7 @@ export function useJournal() {
       const service = getService();
       return await service.getAllTags();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get tags');
+      setError(err instanceof Error ? err.message : "Failed to get tags");
       return [];
     }
   };
@@ -758,7 +958,7 @@ export function useJournal() {
     getEntryByDate,
     searchEntries,
     getJournalStats,
-    getAllTags
+    getAllTags,
   };
 }
 
@@ -773,7 +973,7 @@ export function useDashboardData() {
   const loadDashboardData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const manager = DatabaseManager.getInstance();
       const sleepService = new SleepLogService(manager.getDatabase());
@@ -789,7 +989,7 @@ export function useDashboardData() {
         allStreaks,
         moodTrend,
         sleepStats,
-        recentJournalEntries
+        recentJournalEntries,
       ] = await Promise.all([
         sleepService.getRecentSleepLogs(7),
         moodService.getRecentMoodLogs(7),
@@ -797,7 +997,7 @@ export function useDashboardData() {
         streakService.getAllStreaks(),
         moodService.getMoodTrend(7),
         sleepService.getSleepStats(7),
-        journalService.getRecentEntries(7)
+        journalService.getRecentEntries(7),
       ]);
 
       setDashboardData({
@@ -808,10 +1008,12 @@ export function useDashboardData() {
         moodTrend,
         sleepStats,
         recentJournalEntries,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setError(
+        err instanceof Error ? err.message : "Failed to load dashboard data",
+      );
     } finally {
       setLoading(false);
     }
@@ -822,6 +1024,6 @@ export function useDashboardData() {
     loading,
     error,
     loadDashboardData,
-    refresh: loadDashboardData
+    refresh: loadDashboardData,
   };
 }

@@ -1,5 +1,5 @@
-import { SQLiteDatabase } from 'expo-sqlite';
-import { CrisisResource } from '../types';
+import { SQLiteDatabase } from "expo-sqlite";
+import { CrisisResource } from "../types";
 
 export class CrisisResourceService {
   constructor(private db: SQLiteDatabase) {}
@@ -11,7 +11,7 @@ export class CrisisResourceService {
       ORDER BY priority ASC, name ASC
     `);
 
-    return results.map(row => ({
+    return results.map((row) => ({
       id: row.id,
       name: row.name,
       type: row.type,
@@ -20,7 +20,7 @@ export class CrisisResourceService {
       isActive: row.is_active === 1,
       priority: row.priority,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
     }));
   }
 
@@ -31,7 +31,7 @@ export class CrisisResourceService {
       ORDER BY priority ASC
     `);
 
-    return results.map(row => ({
+    return results.map((row) => ({
       id: row.id,
       name: row.name,
       type: row.type,
@@ -40,7 +40,7 @@ export class CrisisResourceService {
       isActive: row.is_active === 1,
       priority: row.priority,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
     }));
   }
 }

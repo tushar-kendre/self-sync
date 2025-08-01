@@ -1,29 +1,40 @@
-import { SQLiteDatabase } from 'expo-sqlite';
-import { AIInsight } from '../types';
+import { SQLiteDatabase } from "expo-sqlite";
+import { AIInsight } from "../types";
 
 export class AIInsightService {
   constructor(private db: SQLiteDatabase) {}
 
-  async createInsight(data: Omit<AIInsight, 'id' | 'createdAt'>): Promise<AIInsight> {
+  async createInsight(
+    data: Omit<AIInsight, "id" | "createdAt">,
+  ): Promise<AIInsight> {
     const id = `insight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
 
     const insight: AIInsight = {
       id,
       ...data,
-      createdAt: now
+      createdAt: now,
     };
 
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       INSERT INTO ai_insights (
         id, type, title, content, confidence, metadata, 
         is_read, created_at, expires_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      insight.id, insight.type, insight.title, insight.content,
-      insight.confidence, JSON.stringify(insight.metadata), insight.isRead ? 1 : 0,
-      insight.createdAt, insight.expiresAt
-    ]);
+    `,
+      [
+        insight.id,
+        insight.type,
+        insight.title,
+        insight.content,
+        insight.confidence,
+        JSON.stringify(insight.metadata),
+        insight.isRead ? 1 : 0,
+        insight.createdAt,
+        insight.expiresAt,
+      ],
+    );
 
     return insight;
   }
@@ -39,9 +50,12 @@ export class AIInsightService {
   }
 
   async markAsRead(id: string): Promise<void> {
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       UPDATE ai_insights SET is_read = 1 WHERE id = ?
-    `, [id]);
+    `,
+      [id],
+    );
   }
 
   private mapRowToInsight(row: any): AIInsight {
@@ -51,10 +65,10 @@ export class AIInsightService {
       title: row.title,
       content: row.content,
       confidence: row.confidence,
-      metadata: JSON.parse(row.metadata || '{}'),
+      metadata: JSON.parse(row.metadata || "{}"),
       isRead: row.is_read === 1,
       createdAt: row.created_at,
-      expiresAt: row.expires_at
+      expiresAt: row.expires_at,
     };
   }
 }

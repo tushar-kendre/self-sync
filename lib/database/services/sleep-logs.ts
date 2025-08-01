@@ -1,6 +1,6 @@
-import { SQLiteDatabase } from 'expo-sqlite';
-import { SleepLog } from '../types';
-import { StreakService } from './streaks';
+import { SQLiteDatabase } from "expo-sqlite";
+import { SleepLog } from "../types";
+import { StreakService } from "./streaks";
 
 export class SleepLogService {
   constructor(private db: SQLiteDatabase) {}
@@ -8,7 +8,9 @@ export class SleepLogService {
   /**
    * Create a new sleep log entry
    */
-  async createSleepLog(data: Omit<SleepLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<SleepLog> {
+  async createSleepLog(
+    data: Omit<SleepLog, "id" | "createdAt" | "updatedAt">,
+  ): Promise<SleepLog> {
     const now = new Date().toISOString();
     const id = `sleep-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -17,7 +19,7 @@ export class SleepLogService {
         id,
         ...data,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       };
 
       await this.db.runAsync(
@@ -39,8 +41,8 @@ export class SleepLogService {
           newEntry.notes,
           newEntry.timestamp,
           newEntry.createdAt,
-          newEntry.updatedAt
-        ]
+          newEntry.updatedAt,
+        ],
       );
 
       // Update sleep tracking streak
@@ -49,7 +51,7 @@ export class SleepLogService {
 
       return newEntry;
     } catch (error) {
-      console.error('Error creating sleep log:', error);
+      console.error("Error creating sleep log:", error);
       throw error;
     }
   }
@@ -60,15 +62,15 @@ export class SleepLogService {
   async getSleepLogByDate(date: string): Promise<SleepLog | null> {
     try {
       const result = await this.db.getFirstAsync<any>(
-        'SELECT * FROM sleep_logs WHERE date = ?',
-        [date]
+        "SELECT * FROM sleep_logs WHERE date = ?",
+        [date],
       );
 
       if (!result) return null;
 
       return this.mapRowToSleepLog(result);
     } catch (error) {
-      console.error('Error getting sleep log by date:', error);
+      console.error("Error getting sleep log by date:", error);
       return null;
     }
   }
@@ -76,16 +78,19 @@ export class SleepLogService {
   /**
    * Get sleep logs within a date range
    */
-  async getSleepLogsByDateRange(startDate: string, endDate: string): Promise<SleepLog[]> {
+  async getSleepLogsByDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<SleepLog[]> {
     try {
       const results = await this.db.getAllAsync<any>(
-        'SELECT * FROM sleep_logs WHERE date BETWEEN ? AND ? ORDER BY date DESC',
-        [startDate, endDate]
+        "SELECT * FROM sleep_logs WHERE date BETWEEN ? AND ? ORDER BY date DESC",
+        [startDate, endDate],
       );
 
-      return results.map(row => this.mapRowToSleepLog(row));
+      return results.map((row) => this.mapRowToSleepLog(row));
     } catch (error) {
-      console.error('Error getting sleep logs by date range:', error);
+      console.error("Error getting sleep logs by date range:", error);
       return [];
     }
   }
@@ -96,13 +101,13 @@ export class SleepLogService {
   async getRecentSleepLogs(limit: number = 30): Promise<SleepLog[]> {
     try {
       const results = await this.db.getAllAsync<any>(
-        'SELECT * FROM sleep_logs ORDER BY date DESC LIMIT ?',
-        [limit]
+        "SELECT * FROM sleep_logs ORDER BY date DESC LIMIT ?",
+        [limit],
       );
 
-      return results.map(row => this.mapRowToSleepLog(row));
+      return results.map((row) => this.mapRowToSleepLog(row));
     } catch (error) {
-      console.error('Error getting recent sleep logs:', error);
+      console.error("Error getting recent sleep logs:", error);
       return [];
     }
   }
@@ -110,58 +115,61 @@ export class SleepLogService {
   /**
    * Update a sleep log
    */
-  async updateSleepLog(id: string, data: Partial<Omit<SleepLog, 'id' | 'createdAt' | 'updatedAt'>>): Promise<boolean> {
+  async updateSleepLog(
+    id: string,
+    data: Partial<Omit<SleepLog, "id" | "createdAt" | "updatedAt">>,
+  ): Promise<boolean> {
     try {
       const fields = [];
       const values = [];
 
       if (data.bedTime !== undefined) {
-        fields.push('bed_time = ?');
+        fields.push("bed_time = ?");
         values.push(data.bedTime);
       }
       if (data.wakeTime !== undefined) {
-        fields.push('wake_time = ?');
+        fields.push("wake_time = ?");
         values.push(data.wakeTime);
       }
       if (data.sleepDurationHours !== undefined) {
-        fields.push('sleep_duration_hours = ?');
+        fields.push("sleep_duration_hours = ?");
         values.push(data.sleepDurationHours);
       }
       if (data.sleepQuality !== undefined) {
-        fields.push('sleep_quality = ?');
+        fields.push("sleep_quality = ?");
         values.push(data.sleepQuality);
       }
       if (data.sleepInterruptions !== undefined) {
-        fields.push('sleep_interruptions = ?');
+        fields.push("sleep_interruptions = ?");
         values.push(data.sleepInterruptions);
       }
       if (data.dreamRecall !== undefined) {
-        fields.push('dream_recall = ?');
+        fields.push("dream_recall = ?");
         values.push(data.dreamRecall ? 1 : 0);
       }
       if (data.environment !== undefined) {
-        fields.push('environment = ?');
+        fields.push("environment = ?");
         values.push(data.environment);
       }
       if (data.notes !== undefined) {
-        fields.push('notes = ?');
+        fields.push("notes = ?");
         values.push(data.notes);
       }
 
       if (fields.length === 0) return false;
 
-      fields.push('updated_at = ?');
+      fields.push("updated_at = ?");
       values.push(new Date().toISOString());
       values.push(id);
 
       await this.db.runAsync(
-        `UPDATE sleep_logs SET ${fields.join(', ')} WHERE id = ?`,
-        values
+        `UPDATE sleep_logs SET ${fields.join(", ")} WHERE id = ?`,
+        values,
       );
 
       return true;
     } catch (error) {
-      console.error('Error updating sleep log:', error);
+      console.error("Error updating sleep log:", error);
       return false;
     }
   }
@@ -171,10 +179,10 @@ export class SleepLogService {
    */
   async deleteSleepLog(id: string): Promise<boolean> {
     try {
-      await this.db.runAsync('DELETE FROM sleep_logs WHERE id = ?', [id]);
+      await this.db.runAsync("DELETE FROM sleep_logs WHERE id = ?", [id]);
       return true;
     } catch (error) {
-      console.error('Error deleting sleep log:', error);
+      console.error("Error deleting sleep log:", error);
       return false;
     }
   }
@@ -190,8 +198,8 @@ export class SleepLogService {
   }> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = new Date().toISOString().split('T')[0];
+    const startDateStr = startDate.toISOString().split("T")[0];
+    const endDateStr = new Date().toISOString().split("T")[0];
 
     try {
       const result = await this.db.getFirstAsync<{
@@ -207,22 +215,22 @@ export class SleepLogService {
           COUNT(*) as count
         FROM sleep_logs 
         WHERE date BETWEEN ? AND ?`,
-        [startDateStr, endDateStr]
+        [startDateStr, endDateStr],
       );
 
       return {
         averageHours: result?.avg_hours || 0,
         averageQuality: result?.avg_quality || 0,
         averageEfficiency: result?.avg_efficiency || 0,
-        totalLogs: result?.count || 0
+        totalLogs: result?.count || 0,
       };
     } catch (error) {
-      console.error('Error getting sleep stats:', error);
+      console.error("Error getting sleep stats:", error);
       return {
         averageHours: 0,
         averageQuality: 0,
         averageEfficiency: 0,
-        totalLogs: 0
+        totalLogs: 0,
       };
     }
   }
@@ -230,16 +238,18 @@ export class SleepLogService {
   /**
    * Get sleep quality trend
    */
-  async getSleepQualityTrend(days: number = 30): Promise<Array<{
-    date: string;
-    quality: number;
-    hours: number;
-    efficiency: number;
-  }>> {
+  async getSleepQualityTrend(days: number = 30): Promise<
+    Array<{
+      date: string;
+      quality: number;
+      hours: number;
+      efficiency: number;
+    }>
+  > {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = new Date().toISOString().split('T')[0];
+    const startDateStr = startDate.toISOString().split("T")[0];
+    const endDateStr = new Date().toISOString().split("T")[0];
 
     try {
       const results = await this.db.getAllAsync<{
@@ -256,12 +266,12 @@ export class SleepLogService {
         FROM sleep_logs 
         WHERE date BETWEEN ? AND ?
         ORDER BY date ASC`,
-        [startDateStr, endDateStr]
+        [startDateStr, endDateStr],
       );
 
       return results;
     } catch (error) {
-      console.error('Error getting sleep quality trend:', error);
+      console.error("Error getting sleep quality trend:", error);
       return [];
     }
   }
@@ -272,12 +282,12 @@ export class SleepLogService {
   calculateSleepDuration(bedTime: string, wakeTime: string): number {
     const bed = new Date(`1970-01-01T${bedTime}`);
     let wake = new Date(`1970-01-01T${wakeTime}`);
-    
+
     // If wake time is earlier than bed time, assume it's the next day
     if (wake < bed) {
       wake = new Date(`1970-01-02T${wakeTime}`);
     }
-    
+
     const durationMs = wake.getTime() - bed.getTime();
     return durationMs / (1000 * 60 * 60); // Convert to hours
   }
@@ -299,7 +309,7 @@ export class SleepLogService {
       notes: row.notes,
       timestamp: row.timestamp,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
     };
   }
 }

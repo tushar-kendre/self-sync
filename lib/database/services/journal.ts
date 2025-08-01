@@ -1,5 +1,5 @@
-import type { SQLiteDatabase } from 'expo-sqlite';
-import type { JournalEntry } from '../types';
+import type { SQLiteDatabase } from "expo-sqlite";
+import type { JournalEntry } from "../types";
 
 export class JournalService {
   constructor(private db: SQLiteDatabase) {}
@@ -7,13 +7,18 @@ export class JournalService {
   /**
    * Create a new journal entry
    */
-  async createEntry(data: Omit<JournalEntry, 'id' | 'wordCount' | 'createdAt' | 'updatedAt'>): Promise<JournalEntry> {
+  async createEntry(
+    data: Omit<JournalEntry, "id" | "wordCount" | "createdAt" | "updatedAt">,
+  ): Promise<JournalEntry> {
     const now = new Date().toISOString();
     const id = `journal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Calculate word count
-    const wordCount = data.content.trim().split(/\s+/).filter(word => word.length > 0).length;
-    
+    const wordCount = data.content
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
+
     const entry: JournalEntry = {
       id,
       date: data.date,
@@ -24,36 +29,42 @@ export class JournalService {
       isPrivate: data.isPrivate,
       wordCount,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       INSERT INTO journal_entries (
         id, date, title, content, mood, tags, is_private, word_count, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      entry.id,
-      entry.date,
-      entry.title,
-      entry.content,
-      entry.mood,
-      entry.tags,
-      entry.isPrivate ? 1 : 0,
-      entry.wordCount,
-      entry.createdAt,
-      entry.updatedAt
-    ]);
+    `,
+      [
+        entry.id,
+        entry.date,
+        entry.title,
+        entry.content,
+        entry.mood,
+        entry.tags,
+        entry.isPrivate ? 1 : 0,
+        entry.wordCount,
+        entry.createdAt,
+        entry.updatedAt,
+      ],
+    );
 
-    console.log('✅ Journal entry created:', entry.id);
+    console.log("✅ Journal entry created:", entry.id);
     return entry;
   }
 
   /**
    * Update an existing journal entry
    */
-  async updateEntry(id: string, data: Partial<Omit<JournalEntry, 'id' | 'createdAt'>>): Promise<JournalEntry | null> {
+  async updateEntry(
+    id: string,
+    data: Partial<Omit<JournalEntry, "id" | "createdAt">>,
+  ): Promise<JournalEntry | null> {
     const now = new Date().toISOString();
-    
+
     // Get the current entry first
     const current = await this.getEntryById(id);
     if (!current) {
@@ -63,34 +74,40 @@ export class JournalService {
     // Calculate new word count if content is being updated
     let wordCount = current.wordCount;
     if (data.content !== undefined) {
-      wordCount = data.content.trim().split(/\s+/).filter(word => word.length > 0).length;
+      wordCount = data.content
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0).length;
     }
 
     const updatedEntry: JournalEntry = {
       ...current,
       ...data,
       wordCount,
-      updatedAt: now
+      updatedAt: now,
     };
 
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       UPDATE journal_entries 
       SET date = ?, title = ?, content = ?, mood = ?, tags = ?, 
           is_private = ?, word_count = ?, updated_at = ?
       WHERE id = ?
-    `, [
-      updatedEntry.date,
-      updatedEntry.title,
-      updatedEntry.content,
-      updatedEntry.mood,
-      updatedEntry.tags,
-      updatedEntry.isPrivate ? 1 : 0,
-      updatedEntry.wordCount,
-      updatedEntry.updatedAt,
-      id
-    ]);
+    `,
+      [
+        updatedEntry.date,
+        updatedEntry.title,
+        updatedEntry.content,
+        updatedEntry.mood,
+        updatedEntry.tags,
+        updatedEntry.isPrivate ? 1 : 0,
+        updatedEntry.wordCount,
+        updatedEntry.updatedAt,
+        id,
+      ],
+    );
 
-    console.log('✅ Journal entry updated:', id);
+    console.log("✅ Journal entry updated:", id);
     return updatedEntry;
   }
 
@@ -98,9 +115,12 @@ export class JournalService {
    * Get a journal entry by ID
    */
   async getEntryById(id: string): Promise<JournalEntry | null> {
-    const result = await this.db.getFirstAsync<any>(`
+    const result = await this.db.getFirstAsync<any>(
+      `
       SELECT * FROM journal_entries WHERE id = ?
-    `, [id]);
+    `,
+      [id],
+    );
 
     if (!result) return null;
 
@@ -114,7 +134,7 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     };
   }
 
@@ -122,9 +142,12 @@ export class JournalService {
    * Get journal entry for a specific date
    */
   async getEntryByDate(date: string): Promise<JournalEntry | null> {
-    const result = await this.db.getFirstAsync<any>(`
+    const result = await this.db.getFirstAsync<any>(
+      `
       SELECT * FROM journal_entries WHERE date = ? ORDER BY created_at DESC LIMIT 1
-    `, [date]);
+    `,
+      [date],
+    );
 
     if (!result) return null;
 
@@ -138,7 +161,7 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     };
   }
 
@@ -146,13 +169,16 @@ export class JournalService {
    * Get recent journal entries
    */
   async getRecentEntries(limit: number = 20): Promise<JournalEntry[]> {
-    const results = await this.db.getAllAsync<any>(`
+    const results = await this.db.getAllAsync<any>(
+      `
       SELECT * FROM journal_entries 
       ORDER BY created_at DESC 
       LIMIT ?
-    `, [limit]);
+    `,
+      [limit],
+    );
 
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.id,
       date: result.date,
       title: result.title,
@@ -162,21 +188,27 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     }));
   }
 
   /**
    * Get journal entries for a date range
    */
-  async getEntriesInRange(startDate: string, endDate: string): Promise<JournalEntry[]> {
-    const results = await this.db.getAllAsync<any>(`
+  async getEntriesInRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<JournalEntry[]> {
+    const results = await this.db.getAllAsync<any>(
+      `
       SELECT * FROM journal_entries 
       WHERE date BETWEEN ? AND ?
       ORDER BY date DESC, created_at DESC
-    `, [startDate, endDate]);
+    `,
+      [startDate, endDate],
+    );
 
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.id,
       date: result.date,
       title: result.title,
@@ -186,23 +218,29 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     }));
   }
 
   /**
    * Search journal entries by content or title
    */
-  async searchEntries(query: string, limit: number = 20): Promise<JournalEntry[]> {
+  async searchEntries(
+    query: string,
+    limit: number = 20,
+  ): Promise<JournalEntry[]> {
     const searchTerm = `%${query}%`;
-    const results = await this.db.getAllAsync<any>(`
+    const results = await this.db.getAllAsync<any>(
+      `
       SELECT * FROM journal_entries 
       WHERE (content LIKE ? OR title LIKE ?)
       ORDER BY created_at DESC 
       LIMIT ?
-    `, [searchTerm, searchTerm, limit]);
+    `,
+      [searchTerm, searchTerm, limit],
+    );
 
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.id,
       date: result.date,
       title: result.title,
@@ -212,7 +250,7 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     }));
   }
 
@@ -220,13 +258,16 @@ export class JournalService {
    * Get entries by mood rating
    */
   async getEntriesByMood(mood: number): Promise<JournalEntry[]> {
-    const results = await this.db.getAllAsync<any>(`
+    const results = await this.db.getAllAsync<any>(
+      `
       SELECT * FROM journal_entries 
       WHERE mood = ?
       ORDER BY created_at DESC
-    `, [mood]);
+    `,
+      [mood],
+    );
 
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.id,
       date: result.date,
       title: result.title,
@@ -236,7 +277,7 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     }));
   }
 
@@ -252,9 +293,10 @@ export class JournalService {
   }> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    const startDateStr = startDate.toISOString().split('T')[0];
+    const startDateStr = startDate.toISOString().split("T")[0];
 
-    const stats = await this.db.getFirstAsync<any>(`
+    const stats = await this.db.getFirstAsync<any>(
+      `
       SELECT 
         COUNT(*) as total_entries,
         SUM(word_count) as total_words,
@@ -262,22 +304,27 @@ export class JournalService {
         AVG(mood) as avg_mood
       FROM journal_entries 
       WHERE date >= ?
-    `, [startDateStr]);
+    `,
+      [startDateStr],
+    );
 
     // Calculate streak (consecutive days with entries)
-    const recentEntries = await this.db.getAllAsync<any>(`
+    const recentEntries = await this.db.getAllAsync<any>(
+      `
       SELECT DISTINCT date FROM journal_entries 
       ORDER BY date DESC 
       LIMIT ?
-    `, [days]);
+    `,
+      [days],
+    );
 
     let streakDays = 0;
     if (recentEntries.length > 0) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       let currentDate = new Date(today);
-      
+
       for (const entry of recentEntries) {
-        const entryDate = currentDate.toISOString().split('T')[0];
+        const entryDate = currentDate.toISOString().split("T")[0];
         if (entry.date === entryDate) {
           streakDays++;
           currentDate.setDate(currentDate.getDate() - 1);
@@ -292,7 +339,7 @@ export class JournalService {
       totalWords: stats?.total_words || 0,
       averageWordsPerEntry: Math.round(stats?.avg_words || 0),
       averageMood: parseFloat((stats?.avg_mood || 0).toFixed(1)),
-      streakDays
+      streakDays,
     };
   }
 
@@ -300,13 +347,16 @@ export class JournalService {
    * Delete a journal entry
    */
   async deleteEntry(id: string): Promise<boolean> {
-    const result = await this.db.runAsync(`
+    const result = await this.db.runAsync(
+      `
       DELETE FROM journal_entries WHERE id = ?
-    `, [id]);
+    `,
+      [id],
+    );
 
     const deleted = result.changes > 0;
     if (deleted) {
-      console.log('✅ Journal entry deleted:', id);
+      console.log("✅ Journal entry deleted:", id);
     }
     return deleted;
   }
@@ -321,17 +371,17 @@ export class JournalService {
     `);
 
     const allTags = new Set<string>();
-    
-    results.forEach(result => {
+
+    results.forEach((result) => {
       if (result.tags) {
         try {
           const tags = JSON.parse(result.tags);
           if (Array.isArray(tags)) {
-            tags.forEach(tag => allTags.add(tag));
+            tags.forEach((tag) => allTags.add(tag));
           }
         } catch (e) {
           // Handle malformed JSON gracefully
-          console.warn('Failed to parse tags:', result.tags);
+          console.warn("Failed to parse tags:", result.tags);
         }
       }
     });
@@ -343,13 +393,16 @@ export class JournalService {
    * Get entries by tag
    */
   async getEntriesByTag(tag: string): Promise<JournalEntry[]> {
-    const results = await this.db.getAllAsync<any>(`
+    const results = await this.db.getAllAsync<any>(
+      `
       SELECT * FROM journal_entries 
       WHERE tags LIKE ?
       ORDER BY created_at DESC
-    `, [`%"${tag}"%`]);
+    `,
+      [`%"${tag}"%`],
+    );
 
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.id,
       date: result.date,
       title: result.title,
@@ -359,7 +412,7 @@ export class JournalService {
       isPrivate: result.is_private === 1,
       wordCount: result.word_count,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     }));
   }
 }

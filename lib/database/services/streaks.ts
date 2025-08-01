@@ -1,14 +1,17 @@
-import { SQLiteDatabase } from 'expo-sqlite';
-import { Streak } from '../types';
+import { SQLiteDatabase } from "expo-sqlite";
+import { Streak } from "../types";
 
 export class StreakService {
   constructor(private db: SQLiteDatabase) {}
 
-  async updateStreak(behaviorType: string, wasResisted: boolean): Promise<Streak> {
-    const today = new Date().toISOString().split('T')[0];
-    
+  async updateStreak(
+    behaviorType: string,
+    wasResisted: boolean,
+  ): Promise<Streak> {
+    const today = new Date().toISOString().split("T")[0];
+
     let streak = await this.getStreakByType(behaviorType);
-    
+
     if (!streak) {
       // Create new streak
       const id = `streak-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -19,7 +22,7 @@ export class StreakService {
         longestStreak: wasResisted ? 1 : 0,
         lastResetDate: wasResisted ? null : today,
         startDate: today,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     } else {
       if (wasResisted) {
@@ -34,23 +37,34 @@ export class StreakService {
       streak.updatedAt = new Date().toISOString();
     }
 
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       INSERT OR REPLACE INTO streaks (
         id, behavior_type, current_streak, longest_streak, 
         last_reset_date, start_date, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [
-      streak.id, streak.behaviorType, streak.currentStreak,
-      streak.longestStreak, streak.lastResetDate, streak.startDate, streak.updatedAt
-    ]);
+    `,
+      [
+        streak.id,
+        streak.behaviorType,
+        streak.currentStreak,
+        streak.longestStreak,
+        streak.lastResetDate,
+        streak.startDate,
+        streak.updatedAt,
+      ],
+    );
 
     return streak;
   }
 
   async getStreakByType(behaviorType: string): Promise<Streak | null> {
-    const result = await this.db.getFirstAsync<any>(`
+    const result = await this.db.getFirstAsync<any>(
+      `
       SELECT * FROM streaks WHERE behavior_type = ?
-    `, [behaviorType]);
+    `,
+      [behaviorType],
+    );
 
     if (!result) return null;
 
@@ -61,7 +75,7 @@ export class StreakService {
       longestStreak: result.longest_streak,
       lastResetDate: result.last_reset_date,
       startDate: result.start_date,
-      updatedAt: result.updated_at
+      updatedAt: result.updated_at,
     };
   }
 
@@ -70,14 +84,14 @@ export class StreakService {
       SELECT * FROM streaks ORDER BY current_streak DESC
     `);
 
-    return results.map(row => ({
+    return results.map((row) => ({
       id: row.id,
       behaviorType: row.behavior_type,
       currentStreak: row.current_streak,
       longestStreak: row.longest_streak,
       lastResetDate: row.last_reset_date,
       startDate: row.start_date,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
     }));
   }
 
@@ -85,11 +99,11 @@ export class StreakService {
    * Update mood logging streak - for tracking consecutive days of mood logging
    */
   async updateMoodStreak(): Promise<Streak> {
-    const today = new Date().toISOString().split('T')[0];
-    const behaviorType = 'mood_logging';
-    
+    const today = new Date().toISOString().split("T")[0];
+    const behaviorType = "mood_logging";
+
     let streak = await this.getStreakByType(behaviorType);
-    
+
     if (!streak) {
       // Create new streak
       const id = `streak-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -100,11 +114,11 @@ export class StreakService {
         longestStreak: 1,
         lastResetDate: null,
         startDate: today,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     } else {
       // Check if we already logged today
-      const lastUpdate = streak.updatedAt?.split('T')[0];
+      const lastUpdate = streak.updatedAt?.split("T")[0];
       if (lastUpdate === today) {
         // Already logged today, just return current streak
         return streak;
@@ -113,8 +127,8 @@ export class StreakService {
       // Check if it's a consecutive day
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+
       if (lastUpdate === yesterdayStr) {
         // Consecutive day - increment streak
         streak.currentStreak += 1;
@@ -126,19 +140,27 @@ export class StreakService {
         streak.currentStreak = 1;
         streak.lastResetDate = today;
       }
-      
+
       streak.updatedAt = new Date().toISOString();
     }
 
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       INSERT OR REPLACE INTO streaks (
         id, behavior_type, current_streak, longest_streak, 
         last_reset_date, start_date, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [
-      streak.id, streak.behaviorType, streak.currentStreak,
-      streak.longestStreak, streak.lastResetDate, streak.startDate, streak.updatedAt
-    ]);
+    `,
+      [
+        streak.id,
+        streak.behaviorType,
+        streak.currentStreak,
+        streak.longestStreak,
+        streak.lastResetDate,
+        streak.startDate,
+        streak.updatedAt,
+      ],
+    );
 
     return streak;
   }
@@ -147,11 +169,11 @@ export class StreakService {
    * Update sleep tracking streak - for tracking consecutive days of sleep logging
    */
   async updateSleepStreak(): Promise<Streak> {
-    const today = new Date().toISOString().split('T')[0];
-    const behaviorType = 'sleep';
-    
+    const today = new Date().toISOString().split("T")[0];
+    const behaviorType = "sleep";
+
     let streak = await this.getStreakByType(behaviorType);
-    
+
     if (!streak) {
       // Create new streak
       const id = `streak-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -162,11 +184,11 @@ export class StreakService {
         longestStreak: 1,
         lastResetDate: null,
         startDate: today,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     } else {
       // Check if we already logged today
-      const lastUpdate = streak.updatedAt?.split('T')[0];
+      const lastUpdate = streak.updatedAt?.split("T")[0];
       if (lastUpdate === today) {
         // Already logged today, just return current streak
         return streak;
@@ -175,8 +197,8 @@ export class StreakService {
       // Check if it's a consecutive day
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+
       if (lastUpdate === yesterdayStr) {
         // Consecutive day - increment streak
         streak.currentStreak += 1;
@@ -188,19 +210,112 @@ export class StreakService {
         streak.currentStreak = 1;
         streak.lastResetDate = today;
       }
-      
+
       streak.updatedAt = new Date().toISOString();
     }
 
-    await this.db.runAsync(`
+    await this.db.runAsync(
+      `
       INSERT OR REPLACE INTO streaks (
         id, behavior_type, current_streak, longest_streak, 
         last_reset_date, start_date, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [
-      streak.id, streak.behaviorType, streak.currentStreak,
-      streak.longestStreak, streak.lastResetDate, streak.startDate, streak.updatedAt
-    ]);
+    `,
+      [
+        streak.id,
+        streak.behaviorType,
+        streak.currentStreak,
+        streak.longestStreak,
+        streak.lastResetDate,
+        streak.startDate,
+        streak.updatedAt,
+      ],
+    );
+
+    return streak;
+  }
+
+  /**
+   * Update addiction recovery streak - for tracking consecutive days without slips
+   * @param maintainStreak - true if no slips occurred today, false if there was a slip
+   * @param addictionType - specific addiction type to track (optional, defaults to general recovery)
+   */
+  async updateAddictionStreak(
+    maintainStreak: boolean,
+    addictionType?: string,
+  ): Promise<Streak> {
+    const today = new Date().toISOString().split("T")[0];
+    const behaviorType = addictionType || "addiction_recovery";
+
+    let streak = await this.getStreakByType(behaviorType);
+
+    if (!streak) {
+      // Create new streak
+      const id = `streak-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      streak = {
+        id,
+        behaviorType,
+        currentStreak: maintainStreak ? 1 : 0,
+        longestStreak: maintainStreak ? 1 : 0,
+        lastResetDate: maintainStreak ? null : today,
+        startDate: today,
+        updatedAt: new Date().toISOString(),
+      };
+    } else {
+      // Check if we already updated today
+      const lastUpdate = streak.updatedAt?.split("T")[0];
+      if (lastUpdate === today) {
+        // If there was a slip today and we haven't reset yet, reset the streak
+        if (!maintainStreak && streak.currentStreak > 0) {
+          streak.currentStreak = 0;
+          streak.lastResetDate = today;
+          streak.updatedAt = new Date().toISOString();
+        }
+        return streak;
+      }
+
+      if (maintainStreak) {
+        // No slip today - check if it's a consecutive day
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+        if (lastUpdate === yesterdayStr || streak.currentStreak === 0) {
+          // Consecutive day or starting fresh - increment streak
+          streak.currentStreak += 1;
+          if (streak.currentStreak > streak.longestStreak) {
+            streak.longestStreak = streak.currentStreak;
+          }
+        } else {
+          // Gap in days - start new streak
+          streak.currentStreak = 1;
+        }
+      } else {
+        // Slip occurred - reset streak
+        streak.currentStreak = 0;
+        streak.lastResetDate = today;
+      }
+
+      streak.updatedAt = new Date().toISOString();
+    }
+
+    await this.db.runAsync(
+      `
+      INSERT OR REPLACE INTO streaks (
+        id, behavior_type, current_streak, longest_streak, 
+        last_reset_date, start_date, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+      [
+        streak.id,
+        streak.behaviorType,
+        streak.currentStreak,
+        streak.longestStreak,
+        streak.lastResetDate,
+        streak.startDate,
+        streak.updatedAt,
+      ],
+    );
 
     return streak;
   }

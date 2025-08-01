@@ -20,12 +20,20 @@ export interface SleepLog {
 export interface AddictionLog {
   id: string;
   date: string; // ISO date string (YYYY-MM-DD)
-  addictionType: 'porn' | 'social_media' | 'alcohol' | 'smoking' | 'gambling' | 'shopping' | 'gaming' | 'other';
-  eventType: 'urge' | 'relapse' | 'milestone'; // What happened
+  addictionType:
+    | "porn"
+    | "social_media"
+    | "alcohol"
+    | "smoking"
+    | "gambling"
+    | "shopping"
+    | "gaming"
+    | "other";
+  eventType: "urge" | "milestone"; // What happened
   wasResisted: boolean; // For urges - was it successfully resisted?
-  urgeIntensity: number | null; // 1-10 scale (for urges)
-  durationMinutes: number | null; // Duration of relapse (if applicable)
-  trigger: string | null; // What triggered the urge/relapse
+  urgeIntensity: number | null; // 1-5 scale (for urges)
+  durationMinutes: number | null; // Duration (if applicable)
+  trigger: string | null; // What triggered the urge
   location: string | null; // Where it happened
   moodBefore: number; // 1-5 mood before event
   moodAfter: number; // 1-5 mood after event
@@ -54,8 +62,8 @@ export interface HealthyHabit {
   id: string;
   name: string; // Name of the habit
   description: string | null; // Description of the habit
-  category: 'physical' | 'mental' | 'social' | 'spiritual' | 'productivity';
-  targetFrequency: 'daily' | 'weekly' | 'monthly';
+  category: "physical" | "mental" | "social" | "spiritual" | "productivity";
+  targetFrequency: "daily" | "weekly" | "monthly";
   isActive: boolean; // Whether habit is currently active
   createdAt: string;
   updatedAt: string;
@@ -75,7 +83,7 @@ export interface HabitCompletion {
 export interface CrisisResource {
   id: string;
   name: string; // Name of the resource
-  type: 'hotline' | 'chat' | 'emergency' | 'therapist' | 'friend' | 'family';
+  type: "hotline" | "chat" | "emergency" | "therapist" | "friend" | "family";
   contact: string; // Phone number, email, or URL
   description: string | null; // Description of the resource
   isActive: boolean; // Whether resource is active
@@ -88,13 +96,17 @@ export interface AppSetting {
   id: string;
   key: string; // Setting key name
   value: string; // Setting value as string
-  type: 'boolean' | 'string' | 'number' | 'json';
+  type: "boolean" | "string" | "number" | "json";
   updatedAt: string;
 }
 
 export interface AIInsight {
   id: string;
-  type: 'weekly_summary' | 'pattern_detection' | 'mood_correlation' | 'recommendation';
+  type:
+    | "weekly_summary"
+    | "pattern_detection"
+    | "mood_correlation"
+    | "recommendation";
   title: string; // Insight title
   content: string; // Insight content/description
   confidence: number; // 0-1 scale of AI confidence
@@ -111,6 +123,21 @@ export interface Streak {
   longestStreak: number; // Personal best streak
   lastResetDate: string | null; // When streak was last reset
   startDate: string; // When tracking started
+  updatedAt: string;
+}
+
+export interface ResistanceMetrics {
+  id: string;
+  addictionType: string; // Type of addiction being tracked
+  totalUrges: number; // Total urges logged
+  totalResisted: number; // Total urges successfully resisted
+  resistanceRate: number; // Percentage of urges resisted (0-100)
+  consecutiveResistances: number; // Current consecutive resistances
+  bestResistanceStreak: number; // Best consecutive resistance streak
+  totalResistanceScore: number; // Cumulative resistance points
+  difficultUrgesResisted: number; // Level 4-5 urges resisted
+  triggerMastery: string; // JSON object of trigger -> resistance count
+  lastResistanceDate: string | null; // Last time an urge was resisted
   updatedAt: string;
 }
 
@@ -303,82 +330,82 @@ CREATE INDEX IF NOT EXISTS idx_journal_entries_mood ON journal_entries(mood);
 // Default data for the application
 export const DEFAULT_CRISIS_RESOURCES = [
   {
-    id: 'crisis-1',
-    name: 'National Suicide Prevention Lifeline',
-    type: 'hotline' as const,
-    contact: '988',
-    description: '24/7 crisis support hotline',
+    id: "crisis-1",
+    name: "National Suicide Prevention Lifeline",
+    type: "hotline" as const,
+    contact: "988",
+    description: "24/7 crisis support hotline",
     isActive: true,
     priority: 1,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'crisis-2',
-    name: 'Crisis Text Line',
-    type: 'chat' as const,
-    contact: 'Text HOME to 741741',
-    description: '24/7 crisis support via text',
+    id: "crisis-2",
+    name: "Crisis Text Line",
+    type: "chat" as const,
+    contact: "Text HOME to 741741",
+    description: "24/7 crisis support via text",
     isActive: true,
     priority: 2,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 export const DEFAULT_HEALTHY_HABITS = [
   {
-    id: 'habit-1',
-    name: 'Morning Exercise',
-    description: '30 minutes of physical activity',
-    category: 'physical' as const,
-    targetFrequency: 'daily' as const,
+    id: "habit-1",
+    name: "Morning Exercise",
+    description: "30 minutes of physical activity",
+    category: "physical" as const,
+    targetFrequency: "daily" as const,
     isActive: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'habit-2',
-    name: 'Meditation',
-    description: '10 minutes of mindfulness practice',
-    category: 'mental' as const,
-    targetFrequency: 'daily' as const,
+    id: "habit-2",
+    name: "Meditation",
+    description: "10 minutes of mindfulness practice",
+    category: "mental" as const,
+    targetFrequency: "daily" as const,
     isActive: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'habit-3',
-    name: 'Reading',
-    description: 'Read for 20 minutes',
-    category: 'mental' as const,
-    targetFrequency: 'daily' as const,
+    id: "habit-3",
+    name: "Reading",
+    description: "Read for 20 minutes",
+    category: "mental" as const,
+    targetFrequency: "daily" as const,
     isActive: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 export const DEFAULT_APP_SETTINGS = [
   {
-    id: 'setting-1',
-    key: 'theme',
-    value: 'system',
-    type: 'string' as const,
-    updatedAt: new Date().toISOString()
+    id: "setting-1",
+    key: "theme",
+    value: "system",
+    type: "string" as const,
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'setting-2',
-    key: 'notifications_enabled',
-    value: 'true',
-    type: 'boolean' as const,
-    updatedAt: new Date().toISOString()
+    id: "setting-2",
+    key: "notifications_enabled",
+    value: "true",
+    type: "boolean" as const,
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'setting-3',
-    key: 'first_time_setup',
-    value: 'true',
-    type: 'boolean' as const,
-    updatedAt: new Date().toISOString()
-  }
+    id: "setting-3",
+    key: "first_time_setup",
+    value: "true",
+    type: "boolean" as const,
+    updatedAt: new Date().toISOString(),
+  },
 ];
