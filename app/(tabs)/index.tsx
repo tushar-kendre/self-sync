@@ -305,7 +305,7 @@ export default function Screen() {
       const timeAgo = getTimeAgo(todaySleep.timestamp);
       entries.push({
         type: "sleep",
-        value: `😴 ${todaySleep.sleepDurationHours}h sleep`,
+        value: `😴 ${todaySleep.sleepDurationHours.toFixed(1)}h sleep`,
         time: timeAgo,
         color: "bg-purple-50 border-purple-200",
         timestamp: todaySleep.timestamp,
@@ -347,18 +347,22 @@ export default function Screen() {
         });
     }
 
-    // Add recent sleep logs
+    // Add recent sleep logs (exclude today's to avoid duplicates with local state)
     if (dashboardData?.recentSleepLogs) {
-      dashboardData.recentSleepLogs.slice(0, 1).forEach((log: any) => {
-        const timeAgo = getTimeAgo(log.timestamp);
-        entries.push({
-          type: "sleep",
-          value: `� ${log.sleepDurationHours}h sleep`,
-          time: timeAgo,
-          color: "bg-purple-50 border-purple-200",
-          timestamp: log.timestamp,
+      const today = new Date().toISOString().split("T")[0];
+      dashboardData.recentSleepLogs
+        .filter((log: any) => log.timestamp && !log.timestamp.startsWith(today)) // Exclude today's logs to avoid duplicates
+        .slice(0, 1)
+        .forEach((log: any) => {
+          const timeAgo = getTimeAgo(log.timestamp);
+          entries.push({
+            type: "sleep",
+            value: `😴 ${log.sleepDurationHours.toFixed(1)}h sleep`,
+            time: timeAgo,
+            color: "bg-purple-50 border-purple-200",
+            timestamp: log.timestamp,
+          });
         });
-      });
     }
 
     // Add recent addiction logs (all types)

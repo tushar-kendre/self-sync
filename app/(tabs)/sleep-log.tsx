@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect } from "expo-router";
 import {
   Card,
@@ -17,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { TimePicker } from "../../components/ui/time-picker";
 import { useDatabase, useSleepLogs } from "../../lib/hooks/useDatabase";
 import { useColorScheme } from "../../lib/useColorScheme";
 import { SleepLog } from "../../lib/database/types";
@@ -691,20 +691,18 @@ export default function SleepLogScreen() {
                   </Text>
                   <Moon className="w-5 h-5 text-indigo-500" />
                 </TouchableOpacity>
-                {showBedTimePicker && (
-                  <DateTimePicker
-                    value={bedTime}
-                    mode="time"
-                    is24Hour={true}
-                    display="default"
-                    onChange={(event, selectedTime) => {
-                      setShowBedTimePicker(false);
-                      if (selectedTime) {
-                        setBedTime(selectedTime);
-                      }
-                    }}
-                  />
-                )}
+                <TimePicker
+                  visible={showBedTimePicker}
+                  onClose={() => setShowBedTimePicker(false)}
+                  onTimeSelect={(time) => {
+                    setBedTime(time);
+                    setShowBedTimePicker(false);
+                  }}
+                  initialTime={bedTime}
+                  title="Bedtime"
+                  icon="bedtime"
+                  isDarkColorScheme={isDarkColorScheme}
+                />
               </View>
 
               <View>
@@ -723,20 +721,18 @@ export default function SleepLogScreen() {
                   </Text>
                   <Sun className="w-5 h-5 text-orange-500" />
                 </TouchableOpacity>
-                {showWakeTimePicker && (
-                  <DateTimePicker
-                    value={wakeTime}
-                    mode="time"
-                    is24Hour={true}
-                    display="default"
-                    onChange={(event, selectedTime) => {
-                      setShowWakeTimePicker(false);
-                      if (selectedTime) {
-                        setWakeTime(selectedTime);
-                      }
-                    }}
-                  />
-                )}
+                <TimePicker
+                  visible={showWakeTimePicker}
+                  onClose={() => setShowWakeTimePicker(false)}
+                  onTimeSelect={(time) => {
+                    setWakeTime(time);
+                    setShowWakeTimePicker(false);
+                  }}
+                  initialTime={wakeTime}
+                  title="Wake Time"
+                  icon="waketime"
+                  isDarkColorScheme={isDarkColorScheme}
+                />
               </View>
 
               <View className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl">
