@@ -1,8 +1,13 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 import type { JournalEntry } from "../types";
+import { StreakService } from "./streaks";
 
 export class JournalService {
-  constructor(private db: SQLiteDatabase) {}
+  private streakService: StreakService;
+
+  constructor(private db: SQLiteDatabase) {
+    this.streakService = new StreakService(db);
+  }
 
   /**
    * Create a new journal entry
@@ -53,6 +58,16 @@ export class JournalService {
     );
 
     console.log("✅ Journal entry created:", entry.id);
+    
+    // Update journal streak when creating a new entry
+    try {
+      console.log("🔄 Updating journal streak...");
+      const streak = await this.streakService.updateJournalStreak();
+      console.log("✅ Journal streak updated successfully:", streak);
+    } catch (error) {
+      console.error("❌ Failed to update journal streak:", error);
+    }
+
     return entry;
   }
 

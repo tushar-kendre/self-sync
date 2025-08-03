@@ -315,10 +315,11 @@ export default function Screen() {
     // Add today's journal from local state
     if (todayJournal) {
       const timeAgo = getTimeAgo(todayJournal.createdAt);
+      const cleanContent = stripHtml(todayJournal.content || "");
       const excerpt =
-        todayJournal.content && todayJournal.content.length > 30
-          ? todayJournal.content.substring(0, 30) + "..."
-          : todayJournal.content || "Journal entry";
+        cleanContent.length > 30
+          ? cleanContent.substring(0, 30) + "..."
+          : cleanContent || "Journal entry";
       entries.push({
         type: "journal",
         value: `📖 "${excerpt}"`,
@@ -739,6 +740,11 @@ export default function Screen() {
   const getMoodEmoji = (mood: number) => {
     const moods = ["😢", "😕", "😐", "😊", "😄"];
     return moods[mood - 1] || "😐";
+  };
+
+  // Strip HTML tags from content
+  const stripHtml = (html: string) => {
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
   };
 
   const getWellnessScore = () => {

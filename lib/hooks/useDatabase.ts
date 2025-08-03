@@ -895,6 +895,18 @@ export function useJournal() {
     }
   };
 
+  const getEntryById = async (id: string): Promise<JournalEntry | null> => {
+    try {
+      const service = getService();
+      return await service.getEntryById(id);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to get journal entry",
+      );
+      return null;
+    }
+  };
+
   const getEntryByDate = async (date: string): Promise<JournalEntry | null> => {
     try {
       const service = getService();
@@ -955,6 +967,7 @@ export function useJournal() {
     createEntry,
     updateEntry,
     deleteEntry,
+    getEntryById,
     getEntryByDate,
     searchEntries,
     getJournalStats,
