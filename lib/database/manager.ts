@@ -74,6 +74,9 @@ CREATE TABLE IF NOT EXISTS healthy_habits (
   description TEXT,
   category TEXT DEFAULT 'physical',
   target_frequency TEXT DEFAULT 'daily',
+  tracking_type TEXT DEFAULT 'completion',
+  target_value INTEGER,
+  unit TEXT,
   is_active INTEGER DEFAULT 1,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
@@ -85,10 +88,11 @@ CREATE TABLE IF NOT EXISTS habit_completions (
   habit_id TEXT NOT NULL,
   date TEXT NOT NULL,
   completed INTEGER DEFAULT 0,
+  current_value INTEGER DEFAULT 0,
   difficulty INTEGER DEFAULT 3,
-  time_spent INTEGER,
   notes TEXT,
   created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
   FOREIGN KEY (habit_id) REFERENCES healthy_habits(id) ON DELETE CASCADE
 );
 
@@ -191,37 +195,82 @@ const DEFAULT_HEALTHY_HABITS = [
   {
     id: "habit-1",
     name: "Morning Exercise",
-    description: "30 minutes of physical activity",
+    description: "Daily physical activity to start the day",
     category: "physical",
     target_frequency: "daily",
+    tracking_type: "duration",
+    target_value: 30,
+    unit: "minutes",
   },
   {
     id: "habit-2",
     name: "Meditation",
-    description: "10 minutes of mindfulness meditation",
-    category: "mental",
+    description: "Mindfulness meditation practice",
+    category: "spiritual",
     target_frequency: "daily",
+    tracking_type: "duration",
+    target_value: 10,
+    unit: "minutes",
   },
   {
     id: "habit-3",
     name: "Read Book",
-    description: "30 minutes of reading",
+    description: "Daily reading for personal growth",
     category: "mental",
     target_frequency: "daily",
+    tracking_type: "duration",
+    target_value: 30,
+    unit: "minutes",
   },
   {
     id: "habit-4",
     name: "Drink Water",
-    description: "8 glasses of water",
+    description: "Stay hydrated throughout the day",
     category: "physical",
     target_frequency: "daily",
+    tracking_type: "count",
+    target_value: 8,
+    unit: "glasses",
   },
   {
     id: "habit-5",
-    name: "Gratitude Journal",
-    description: "Write 3 things you are grateful for",
+    name: "Gratitude Practice",
+    description: "Write down things you're grateful for",
     category: "mental",
     target_frequency: "daily",
+    tracking_type: "count",
+    target_value: 3,
+    unit: "items",
+  },
+  {
+    id: "habit-6",
+    name: "Connect with Friends",
+    description: "Reach out to friends or family",
+    category: "social",
+    target_frequency: "daily",
+    tracking_type: "count",
+    target_value: 1,
+    unit: "people",
+  },
+  {
+    id: "habit-7",
+    name: "Deep Work Session",
+    description: "Focused work without distractions",
+    category: "productivity",
+    target_frequency: "daily",
+    tracking_type: "duration",
+    target_value: 90,
+    unit: "minutes",
+  },
+  {
+    id: "habit-8",
+    name: "Steps",
+    description: "Daily step count for fitness",
+    category: "physical",
+    target_frequency: "daily",
+    tracking_type: "count",
+    target_value: 10000,
+    unit: "steps",
   },
 ];
 
@@ -368,13 +417,16 @@ export class DatabaseManager {
         for (const habit of DEFAULT_HEALTHY_HABITS) {
           const now = new Date().toISOString();
           await this.db.runAsync(
-            "INSERT INTO healthy_habits (id, name, description, category, target_frequency, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO healthy_habits (id, name, description, category, target_frequency, tracking_type, target_value, unit, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               habit.id,
               habit.name,
               habit.description,
               habit.category,
               habit.target_frequency,
+              habit.tracking_type,
+              habit.target_value,
+              habit.unit,
               1,
               now,
               now,
@@ -438,32 +490,75 @@ export class DatabaseManager {
     }
 
     try {
-      console.log("🗑️ Clearing all database data...");
+      console.log("🗑️ Completely clearing database - dropping all tables...");
 
-      // Clear all user data tables (preserve default data tables)
-      await this.db.runAsync("DELETE FROM sleep_logs");
-      await this.db.runAsync("DELETE FROM mood_logs");
-      await this.db.runAsync("DELETE FROM addiction_logs");
-      await this.db.runAsync("DELETE FROM healthy_habits");
-      await this.db.runAsync("DELETE FROM habit_completions");
-      await this.db.runAsync("DELETE FROM ai_insights");
-      await this.db.runAsync("DELETE FROM streaks");
-      await this.db.runAsync("DELETE FROM journal_entries");
-      await this.db.runAsync("DELETE FROM resistance_metrics");
+      // Drop all tables completely (for complete fresh start in development)
+      const tables = [
+        'sleep_logs',
+        'mood_logs', 
+        'addiction_logs',
+        'healthy_habits',
+        'habit_completions',
+        'crisis_resources',
+        'app_settings',
+        'ai_insights',
+        'streaks',
+        'journal_entries',
+        'resistance_metrics'
+      ];
 
-      // Reset user settings but keep system settings
-      await this.db.runAsync(
-        "UPDATE app_settings SET value = ? WHERE key = ?",
-        ["", "user_name"],
-      );
-      await this.db.runAsync(
-        "UPDATE app_settings SET value = ? WHERE key = ?",
-        ["false", "setup_complete"],
-      );
+      for (const table of tables) {
+        try {
+          await this.db.runAsync(`DROP TABLE IF EXISTS ${table}`);
+          console.log(`✅ Dropped table: ${table}`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to drop table ${table}:`, error);
+        }
+      }
 
-      console.log("✅ All database data cleared successfully");
+      // Drop indexes as well
+      const indexes = [
+        'idx_sleep_logs_date',
+        'idx_mood_logs_date', 
+        'idx_addiction_logs_date',
+        'idx_habit_completions_date',
+        'idx_habit_completions_habit_id_date',
+        'idx_ai_insights_type_created',
+        'idx_streaks_behavior_type',
+        'idx_journal_entries_date',
+        'idx_journal_entries_created_at',
+        'idx_journal_entries_mood'
+      ];
+
+      for (const index of indexes) {
+        try {
+          await this.db.runAsync(`DROP INDEX IF EXISTS ${index}`);
+          console.log(`✅ Dropped index: ${index}`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to drop index ${index}:`, error);
+        }
+      }
+
+      console.log("🔄 Recreating fresh database schema...");
+      
+      // Recreate all tables fresh
+      await this.db.execAsync(CREATE_TABLES_SQL);
+      
+      // Recreate indexes
+      await this.db.execAsync(CREATE_INDEXES_SQL);
+      
+      // Reinitialize services
+      this.initializeServices();
+      
+      // Create additional tables through services
+      await this.resistanceMetrics.createResistanceMetricsTable();
+      
+      // Reinitialize default data
+      await this.insertDefaultData();
+
+      console.log("✅ Database completely cleared and recreated successfully!");
     } catch (error) {
-      console.error("❌ Failed to clear database data:", error);
+      console.error("❌ Failed to clear database completely:", error);
       throw error;
     }
   }

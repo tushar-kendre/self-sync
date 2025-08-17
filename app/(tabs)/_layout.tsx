@@ -5,10 +5,11 @@ import {
   Home,
   AlertTriangle,
   CheckCircle,
-  BookOpen,
   Smile,
   BarChart3,
+  Menu,
   MoonStar,
+  BookOpen,
 } from "lucide-react-native";
 
 export default function TabLayout() {
@@ -40,13 +41,11 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Smile size={size} color={color} />,
         }}
       />
+      {/* Sleep moved under More tab */}
       <Tabs.Screen
         name="sleep-log"
         options={{
-          title: "Sleep",
-          tabBarIcon: ({ color, size }) => (
-            <MoonStar size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -67,13 +66,11 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* Journal moved under More tab */}
       <Tabs.Screen
         name="journal"
         options={{
-          title: "Journal",
-          tabBarIcon: ({ color, size }) => (
-            <BookOpen size={size} color={color} />
-          ),
+          href: null,
         }}
       />
 
@@ -84,6 +81,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <BarChart3 size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: "More",
+          tabBarIcon: ({ color, size }) => <Menu size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -23,6 +23,7 @@ import {
   useAddictionLogs,
   useDashboardData,
   useJournal,
+  useHabits,
 } from "~/lib/hooks/useDatabase";
 import { useColorScheme } from "~/lib/useColorScheme";
 import type { MoodLog, SleepLog } from "~/lib/database/types";
@@ -71,6 +72,7 @@ export default function Screen() {
     loading: dashboardLoading,
   } = useDashboardData();
   const { getEntryByDate } = useJournal();
+  const { habits, loadAllHabits } = useHabits();
   const [todayMoodLogs, setTodayMoodLogs] = React.useState<MoodLog[]>([]);
   const [todaySleep, setTodaySleep] = React.useState<SleepLog | null>(null);
   const [todayJournal, setTodayJournal] = React.useState<any>(null);
@@ -95,6 +97,7 @@ export default function Screen() {
       loadAllStreaks();
       loadTodayData();
       loadDashboardData();
+  loadAllHabits();
     }
   }, [isInitialized]);
 
@@ -219,21 +222,21 @@ export default function Screen() {
     try {
       // Show confirmation alert
       Alert.alert(
-        "Clear Database",
-        "Are you sure you want to delete ALL your data? This action cannot be undone.",
+        "Reset Database",
+        "Are you sure you want to completely RESET the database? This will drop all tables and recreate them fresh. All your data will be permanently lost. This action cannot be undone.",
         [
           {
             text: "Cancel",
             style: "cancel",
           },
           {
-            text: "Delete All",
+            text: "Reset All",
             style: "destructive",
             onPress: async () => {
               try {
-                console.log("Clearing database...");
+                console.log("Completely resetting database...");
 
-                // Clear the actual SQLite database
+                // Clear the actual SQLite database (drops all tables)
                 await clearAllData();
 
                 // Clear all local state
@@ -241,7 +244,7 @@ export default function Screen() {
                 setTodaySleep(null);
                 setTodayJournal(null);
 
-                console.log("Database cleared successfully");
+                console.log("Database reset successfully");
 
                 // Reset welcome check flag BEFORE retry
                 setHasCheckedWelcome(false);
@@ -260,13 +263,13 @@ export default function Screen() {
 
                 Alert.alert(
                   "Success",
-                  "All data has been cleared successfully. Navigate to other tabs to see them refresh with empty data. Welcome back!",
+                  "Database has been completely reset! All tables were dropped and recreated fresh. Navigate to other tabs to see them refresh with empty data. Welcome back!",
                 );
               } catch (error) {
-                console.error("Failed to clear database:", error);
+                console.error("Failed to reset database:", error);
                 Alert.alert(
                   "Error",
-                  "Failed to clear database. Please try again.",
+                  "Failed to reset database. Please try again.",
                 );
               }
             },
@@ -403,6 +406,50 @@ export default function Screen() {
         });
     }
 
+    // Add today's and recent habit completions
+    if (dashboardData?.recentHabitCompletions && habits?.length) {
+      const habitMap: Record<string, any> = {};
+      habits.forEach((h: any) => (habitMap[h.id] = h));
+      const today = new Date().toISOString().split("T")[0];
+      const categoryEmoji: Record<string, string> = {
+        physical: "🏃",
+        mental: "📘",
+        social: "🤝",
+        spiritual: "🧘",
+        productivity: "⚡",
+      };
+      const categoryColor: Record<string, string> = {
+        physical: "bg-emerald-50 border-emerald-200",
+        mental: "bg-indigo-50 border-indigo-200",
+        social: "bg-rose-50 border-rose-200",
+        spiritual: "bg-violet-50 border-violet-200",
+        productivity: "bg-amber-50 border-amber-200",
+      };
+
+      dashboardData.recentHabitCompletions
+        .filter((c: any) => c.completed)
+        .slice(0, 4)
+        .forEach((c: any) => {
+          const habit = habitMap[c.habitId];
+            if (!habit) return;
+          const timestamp = c.updatedAt || c.createdAt || `${c.date}T00:00:00.000Z`;
+          const timeAgo = getTimeAgo(timestamp);
+          const cat = habit.category || "productivity";
+          const emoji = categoryEmoji[cat] || "✅";
+          const colorClass = categoryColor[cat] || "bg-green-50 border-green-200";
+          // Avoid duplicate if same timestamp/type already present
+          if (!entries.find(e => e.type === "habit" && e.timestamp === timestamp)) {
+            entries.push({
+              type: "habit",
+              value: `${emoji} ${habit.name}${habit.trackingType !== 'completion' && habit.targetValue ? ` (${c.currentValue}${habit.unit ? ' '+habit.unit : ''}/${habit.targetValue})` : ''}`,
+              time: c.date === today ? timeAgo : (c.date === today ? timeAgo : "Yesterday"),
+              color: colorClass,
+              timestamp,
+            });
+          }
+        });
+    }
+
     // Sort by most recent timestamp and return top 4
     return entries
       .sort(
@@ -504,6 +551,10 @@ export default function Screen() {
       meditation: Star,
       sleep: Moon,
       hydration: Activity,
+  reading: BookOpen,
+  gratitude: Star,
+  deep_work: Zap,
+  steps: Activity,
     };
     return icons[behaviorType as keyof typeof icons] || Target;
   };
@@ -632,6 +683,22 @@ export default function Screen() {
           : (["#cffafe", "#dbeafe"] as const),
         border: "border-cyan-200 dark:border-cyan-800",
       },
+      reading: {
+        colors: isDark ? (["#312e81", "#3730a3"] as const) : (["#e0e7ff", "#dbeafe"] as const),
+        border: "border-indigo-200 dark:border-indigo-800",
+      },
+      gratitude: {
+        colors: isDark ? (["#581c87", "#6b21a8"] as const) : (["#f5d0fe", "#e9d5ff"] as const),
+        border: "border-purple-200 dark:border-purple-800",
+      },
+      deep_work: {
+        colors: isDark ? (["#064e3b", "#065f46"] as const) : (["#d1fae5", "#a7f3d0"] as const),
+        border: "border-emerald-200 dark:border-emerald-800",
+      },
+      steps: {
+        colors: isDark ? (["#134e4a", "#0f766e"] as const) : (["#ccfbf1", "#99f6e4"] as const),
+        border: "border-teal-200 dark:border-teal-800",
+      },
     };
     return (
       styles[behaviorType as keyof typeof styles] || {
@@ -667,6 +734,10 @@ export default function Screen() {
       meditation: "text-purple-600 dark:text-purple-400",
       sleep: "text-indigo-600 dark:text-indigo-400",
       hydration: "text-cyan-600 dark:text-cyan-400",
+  reading: "text-indigo-600 dark:text-indigo-400",
+  gratitude: "text-purple-600 dark:text-purple-400",
+  deep_work: "text-emerald-600 dark:text-emerald-400",
+  steps: "text-teal-600 dark:text-teal-400",
     };
     return (
       colors[behaviorType as keyof typeof colors] ||
@@ -693,6 +764,10 @@ export default function Screen() {
       meditation: "Meditation",
       sleep: "Sleep",
       hydration: "Hydration",
+  reading: "Reading",
+  gratitude: "Gratitude",
+  deep_work: "Deep Work",
+  steps: "Steps",
     };
     return (
       names[behaviorType as keyof typeof names] ||
@@ -749,35 +824,43 @@ export default function Screen() {
 
   const getWellnessScore = () => {
     let score = 0;
+    const todayStr = new Date().toISOString().split("T")[0];
 
-    // Mood contributes 40% (average of today's mood logs)
+    // Weights (total 100)
+    const weights = {
+      mood: 35,
+      sleep: 25,
+      habits: 20,
+      addiction: 20,
+    };
+
+    // Mood (average mood 1-5)
     if (todayMoodLogs.length > 0) {
-      const avgMood =
-        todayMoodLogs.reduce((sum, log) => sum + log.mood, 0) /
-        todayMoodLogs.length;
-      score += (avgMood / 5) * 40;
+      const avgMood = todayMoodLogs.reduce((sum, log) => sum + log.mood, 0) / todayMoodLogs.length;
+      score += (avgMood / 5) * weights.mood;
     }
 
-    // Sleep contributes 30% (based on sleep duration and quality)
+    // Sleep (duration + quality)
     if (todaySleep) {
-      const sleepScore =
-        Math.min(todaySleep.sleepDurationHours / 8, 1) * 0.7 +
-        (todaySleep.sleepQuality / 5) * 0.3;
-      score += sleepScore * 30;
+      const sleepScore = Math.min(todaySleep.sleepDurationHours / 8, 1) * 0.7 + (todaySleep.sleepQuality / 5) * 0.3;
+      score += sleepScore * weights.sleep;
     }
 
-    // Use dashboard data for addiction resistance (30%)
+    // Habits (percentage of active habits completed today)
+    if (dashboardData?.recentHabitCompletions && dashboardData?.recentHabitCompletions.length > 0 && habits?.length) {
+      const todaysCompletions = dashboardData.recentHabitCompletions.filter((c: any) => c.date === todayStr && c.completed);
+      const activeHabits = habits.length;
+      if (activeHabits > 0) {
+        const habitCompletionRate = Math.min(todaysCompletions.length / activeHabits, 1);
+        score += habitCompletionRate * weights.habits;
+      }
+    }
+
+    // Addiction resistance (urges resisted today)
     if (dashboardData?.recentAddictionLogs) {
-      const todayAddictionLogs = dashboardData.recentAddictionLogs.filter(
-        (log: any) => {
-          const today = new Date().toISOString().split("T")[0];
-          return (log.timestamp || log.createdAt)?.startsWith(today);
-        },
-      );
-      const resistedCount = todayAddictionLogs.filter(
-        (log: any) => log.eventType === "urge" && log.wasResisted,
-      ).length;
-      score += Math.min(resistedCount / 3, 1) * 30;
+      const todayAddictionLogs = dashboardData.recentAddictionLogs.filter((log: any) => (log.timestamp || log.createdAt)?.startsWith(todayStr));
+      const resistedCount = todayAddictionLogs.filter((log: any) => log.eventType === "urge" && log.wasResisted).length;
+      score += Math.min(resistedCount / 3, 1) * weights.addiction;
     }
 
     return Math.round(score);
@@ -1182,9 +1265,11 @@ export default function Screen() {
                               ? "😊"
                               : entry.type === "sleep"
                                 ? "😴"
-                                : entry.type === "activity"
-                                  ? "🏃"
-                                  : "🎯"}
+                                : entry.type === "habit"
+                                  ? "✅"
+                                  : entry.type === "activity"
+                                    ? "🏃"
+                                    : "🎯"}
                           </Text>
                         </View>
                         <View className="flex-1">
@@ -1445,11 +1530,11 @@ export default function Screen() {
                 <View className="flex-row items-center gap-2 mb-2">
                   <AlertTriangle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   <Text className="font-semibold text-gray-800 dark:text-gray-300">
-                    Database Management
+                    Database Reset (Dev Tool)
                   </Text>
                 </View>
                 <Text className="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">
-                  Development tools - use with caution
+                  Completely resets database - drops all tables & recreates fresh
                 </Text>
                 <Button
                   variant="destructive"
@@ -1459,12 +1544,12 @@ export default function Screen() {
                   <View className="flex-row items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-white" />
                     <Text className="font-semibold text-white">
-                      Clear All Database Data
+                      Reset Database Tables
                     </Text>
                   </View>
                 </Button>
                 <Text className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  This will permanently delete all your data
+                  Drops all tables and recreates them fresh (perfect for testing schema changes)
                 </Text>
               </View>
             </CardContent>

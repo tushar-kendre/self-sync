@@ -493,10 +493,53 @@ export function useHabits() {
   ): Promise<HabitCompletion | null> => {
     try {
       const service = getService();
-      return await service.completeHabit(data);
+      const result = await service.completeHabit(data);
+      // Refresh habits to update any completion status
+      await loadAllHabits();
+      return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to complete habit");
       return null;
+    }
+  };
+
+  const getTodayCompletions = async (date: string): Promise<HabitCompletion[]> => {
+    try {
+      const service = getService();
+      return await service.getTodayCompletions(date);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load completions");
+      return [];
+    }
+  };
+
+  const getCompletionForHabitAndDate = async (habitId: string, date: string): Promise<HabitCompletion | null> => {
+    try {
+      const service = getService();
+      return await service.getCompletionForHabitAndDate(habitId, date);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load completion");
+      return null;
+    }
+  };
+
+  const getHabitStats = async (habitId: string, days: number = 30) => {
+    try {
+      const service = getService();
+      return await service.getHabitStats(habitId, days);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load habit stats");
+      return { totalCompletions: 0, completionRate: 0, currentStreak: 0, longestStreak: 0 };
+    }
+  };
+
+  const initializeDefaultHabits = async (): Promise<void> => {
+    try {
+      const service = getService();
+      await service.initializeDefaultHabits();
+      await loadAllHabits();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to initialize default habits");
     }
   };
 
@@ -507,6 +550,10 @@ export function useHabits() {
     loadAllHabits,
     createHabit,
     completeHabit,
+    getTodayCompletions,
+    getCompletionForHabitAndDate,
+    getHabitStats,
+    initializeDefaultHabits,
   };
 }
 
@@ -994,11 +1041,13 @@ export function useDashboardData() {
       const addictionService = new AddictionLogService(manager.getDatabase());
       const streakService = new StreakService(manager.getDatabase());
       const journalService = new JournalService(manager.getDatabase());
+  const habitService = new HabitService(manager.getDatabase());
 
       const [
         recentSleepLogs,
         recentMoodLogs,
         recentAddictionLogs,
+        recentHabitCompletions,
         allStreaks,
         moodTrend,
         sleepStats,
@@ -1007,6 +1056,7 @@ export function useDashboardData() {
         sleepService.getRecentSleepLogs(7),
         moodService.getRecentMoodLogs(7),
         addictionService.getRecentAddictionLogs(7),
+        habitService.getRecentHabitCompletions(25),
         streakService.getAllStreaks(),
         moodService.getMoodTrend(7),
         sleepService.getSleepStats(7),
@@ -1017,6 +1067,7 @@ export function useDashboardData() {
         recentSleepLogs,
         recentMoodLogs,
         recentAddictionLogs,
+        recentHabitCompletions,
         streaks: allStreaks,
         moodTrend,
         sleepStats,

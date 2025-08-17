@@ -64,6 +64,9 @@ export interface HealthyHabit {
   description: string | null; // Description of the habit
   category: "physical" | "mental" | "social" | "spiritual" | "productivity";
   targetFrequency: "daily" | "weekly" | "monthly";
+  trackingType: "completion" | "count" | "duration" | "quantity"; // How to track this habit
+  targetValue: number | null; // Target value (e.g., 8 for water glasses, 30 for minutes)
+  unit: string | null; // Unit of measurement (e.g., "glasses", "minutes", "pages", "reps")
   isActive: boolean; // Whether habit is currently active
   createdAt: string;
   updatedAt: string;
@@ -74,10 +77,11 @@ export interface HabitCompletion {
   habitId: string; // Reference to healthy habit
   date: string; // ISO date string
   completed: boolean; // Whether habit was completed
+  currentValue: number; // Current progress value (replaces timeSpent)
   difficulty: number; // 1-5 scale of difficulty
-  timeSpent: number | null; // Minutes spent on habit
   notes: string | null; // Optional notes about completion
   createdAt: string;
+  updatedAt: string; // Track when last updated for multiple updates per day
 }
 
 export interface CrisisResource {
@@ -357,9 +361,12 @@ export const DEFAULT_HEALTHY_HABITS = [
   {
     id: "habit-1",
     name: "Morning Exercise",
-    description: "30 minutes of physical activity",
+    description: "Physical activity to start the day",
     category: "physical" as const,
     targetFrequency: "daily" as const,
+    trackingType: "duration" as const,
+    targetValue: 30,
+    unit: "minutes",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -367,19 +374,64 @@ export const DEFAULT_HEALTHY_HABITS = [
   {
     id: "habit-2",
     name: "Meditation",
-    description: "10 minutes of mindfulness practice",
+    description: "Mindfulness and mental clarity practice",
     category: "mental" as const,
     targetFrequency: "daily" as const,
+    trackingType: "duration" as const,
+    targetValue: 10,
+    unit: "minutes",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
     id: "habit-3",
+    name: "Water Intake",
+    description: "Stay hydrated throughout the day",
+    category: "physical" as const,
+    targetFrequency: "daily" as const,
+    trackingType: "count" as const,
+    targetValue: 8,
+    unit: "glasses",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "habit-4",
     name: "Reading",
-    description: "Read for 20 minutes",
+    description: "Learn something new every day",
     category: "mental" as const,
     targetFrequency: "daily" as const,
+    trackingType: "count" as const,
+    targetValue: 20,
+    unit: "pages",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "habit-5",
+    name: "Gratitude Practice",
+    description: "Reflect on positive moments",
+    category: "spiritual" as const,
+    targetFrequency: "daily" as const,
+    trackingType: "completion" as const,
+    targetValue: null,
+    unit: null,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "habit-6",
+    name: "Deep Work",
+    description: "Focused work without distractions",
+    category: "productivity" as const,
+    targetFrequency: "daily" as const,
+    trackingType: "duration" as const,
+    targetValue: 120,
+    unit: "minutes",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

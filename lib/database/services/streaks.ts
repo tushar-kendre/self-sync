@@ -397,4 +397,63 @@ export class StreakService {
     console.log("✅ Journal streak saved to database:", streak);
     return streak;
   }
+
+  /**
+   * Generic habit streak updater. Each habit key (e.g., exercise, meditation) is tracked once per day when completed.
+   */
+  async updateHabitStreak(habitKey: string): Promise<Streak> {
+    const today = new Date().toISOString().split("T")[0];
+    const behaviorType = habitKey; // stored directly
+
+    let streak = await this.getStreakByType(behaviorType);
+
+    if (!streak) {
+      const id = `streak-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      streak = {
+        id,
+        behaviorType,
+        currentStreak: 1,
+        longestStreak: 1,
+        lastResetDate: null,
+        startDate: today,
+        updatedAt: new Date().toISOString(),
+      };
+    } else {
+      const lastUpdate = streak.updatedAt?.split("T")[0];
+      if (lastUpdate === today) {
+        // already counted today
+        return streak;
+      }
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+      if (lastUpdate === yesterdayStr) {
+        streak.currentStreak += 1;
+        if (streak.currentStreak > streak.longestStreak) streak.longestStreak = streak.currentStreak;
+      } else {
+        streak.currentStreak = 1;
+        streak.lastResetDate = today;
+      }
+      streak.updatedAt = new Date().toISOString();
+    }
+
+    await this.db.runAsync(
+      `
+      INSERT OR REPLACE INTO streaks (
+        id, behavior_type, current_streak, longest_streak, 
+        last_reset_date, start_date, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+      [
+        streak.id,
+        streak.behaviorType,
+        streak.currentStreak,
+        streak.longestStreak,
+        streak.lastResetDate,
+        streak.startDate,
+        streak.updatedAt,
+      ],
+    );
+    return streak;
+  }
 }
